@@ -6,14 +6,14 @@ import { addVisitor } from '../../services/visitors';
 const KEY = 'whatif.me';
 const known = () => { try { return !!localStorage.getItem(KEY); } catch { return false; } };
 
-/** Full-screen, mandatory name form shown once per browser. Not shown on /static. */
+/** Full-screen, mandatory name form shown once per browser. Not shown on /royhat. */
 export function NameGate() {
   const { pathname } = useLocation();
   const [done, setDone] = useState(known);
   const [first, setFirst] = useState('');
   const [last, setLast] = useState('');
   const [err, setErr] = useState('');
-  if (done || pathname.startsWith('/static')) return null;
+  if (done || pathname.startsWith('/royhat') || pathname.startsWith('/static')) return null;
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();

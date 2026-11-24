@@ -51,7 +51,8 @@ export default function App() {
             <Route path="profile" element={<PlayerProfile />} />
             <Route path="achievements" element={<Achievements />} />
             <Route path="settings" element={<SettingsPage />} />
-            <Route path="static" element={<StaticPage />} />
+            <Route path="royhat" element={<StaticPage />} />
+            <Route path="static" element={<Navigate to="/royhat" replace />} />
           </Route>
           <Route path="game" element={<GameLayout />}>
             <Route index element={null} />
