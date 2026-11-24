@@ -40,7 +40,7 @@ export default function MainMenu() {
         <h1 className="title-display gold-text text-6xl font-extrabold leading-none md:text-8xl" style={{ textShadow: '0 4px 40px rgba(217,182,92,.25)' }}>What If?</h1>
         <div className="divider-gold my-6 w-72" />
         <p className="max-w-xl font-serif text-xl leading-relaxed text-parchment-100/90">{t('Rewrite a single moment of history and watch the consequences ripple through economies, dynasties, wars and centuries — on real historical borders, driven by a living simulation.')}</p>
-        <form className="mt-6 flex max-w-md gap-2" onSubmit={(e) => { e.preventDefault(); addVisitor(who); setWho(''); }}>
+        <form className="mt-6 flex max-w-md gap-2" onSubmit={(e) => { e.preventDefault(); void addVisitor(who); setWho(''); }}>
           <input value={who} onChange={(e) => setWho(e.target.value)} maxLength={60} className="input flex-1" placeholder="Ism familya" aria-label="Ism familya" />
           <Button type="submit" variant="gold">OK</Button>
         </form>

@@ -8,15 +8,34 @@ function rollMinutes(): number {
   return 30 + Math.floor(Math.random() * 91);
 }
 
-export function listVisitors(): Visitor[] {
+// VITE_VISITORS_API = test-tizimi serverining manzili (masalan https://test-xxx.vercel.app). Bo'lmasa — shu brauzerda saqlanadi.
+const API = ((import.meta.env.VITE_VISITORS_API as string | undefined) ?? '').replace(/\/+$/, '');
+export const remoteVisitors = !!API;
+
+function listLocal(): Visitor[] {
   try { const v = JSON.parse(localStorage.getItem(KEY) ?? '[]'); return Array.isArray(v) ? v : []; } catch { return []; }
 }
 function save(v: Visitor[]) { try { localStorage.setItem(KEY, JSON.stringify(v)); } catch { /* ignore */ } }
 
-export function addVisitor(name: string): void {
+function addLocal(name: string): void {
   const n = name.trim().replace(/\s+/g, ' ').slice(0, 60);
   if (!n) return;
-  save([{ id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, name: n, at: Date.now(), minutes: rollMinutes() }, ...listVisitors()]);
+  save([{ id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, name: n, at: Date.now(), minutes: rollMinutes() }, ...listLocal()]);
 }
-export function removeVisitor(id: string): void { save(listVisitors().filter((v) => v.id !== id)); }
+function removeLocal(id: string): void { save(listLocal().filter((v) => v.id !== id)); }
+
+export async function addVisitor(name: string): Promise<void> {
+  if (!API) return addLocal(name);
+  try { await fetch(`${API}/api/visitors`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) }); } catch { /* jim */ }
+}
+export async function listVisitors(pin: string): Promise<Visitor[]> {
+  if (!API) return listLocal();
+  const r = await fetch(`${API}/api/visitors`, { headers: { 'X-Pin': pin } });
+  if (!r.ok) throw new Error(String(r.status));
+  return r.json();
+}
+export async function removeVisitor(id: string, pin: string): Promise<void> {
+  if (!API) return removeLocal(id);
+  await fetch(`${API}/api/visitors/${encodeURIComponent(id)}`, { method: 'DELETE', headers: { 'X-Pin': pin } });
+}
 export function fmtMinutes(m: number): string { const h = Math.floor(m / 60), r = m % 60; return h ? `${h} soat ${r} daqiqa` : `${r} daqiqa`; }
