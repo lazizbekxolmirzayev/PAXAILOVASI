@@ -24,9 +24,20 @@ function addLocal(name: string): void {
 }
 function removeLocal(id: string): void { save(listLocal().filter((v) => v.id !== id)); }
 
+const PENDING = 'whatif.pending';
+async function post(name: string): Promise<boolean> {
+  try { const r = await fetch(`${API}/api/visitors`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) }); return r.ok; } catch { return false; }
+}
+/** Sends the name; if the server is unreachable it is kept and retried on the next visit. */
 export async function addVisitor(name: string): Promise<void> {
   if (!API) return addLocal(name);
-  try { await fetch(`${API}/api/visitors`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) }); } catch { /* jim */ }
+  if (!(await post(name))) { try { localStorage.setItem(PENDING, name); } catch { /* ignore */ } }
+}
+export async function retryPending(): Promise<void> {
+  if (!API) return;
+  let n: string | null = null;
+  try { n = localStorage.getItem(PENDING); } catch { /* ignore */ }
+  if (n && (await post(n))) { try { localStorage.removeItem(PENDING); } catch { /* ignore */ } }
 }
 export async function listVisitors(pin: string): Promise<Visitor[]> {
   if (!API) return listLocal();

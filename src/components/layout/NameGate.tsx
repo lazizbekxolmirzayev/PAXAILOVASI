@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { addVisitor } from '../../services/visitors';
+import { addVisitor, retryPending } from '../../services/visitors';
 
-const KEY = 'whatif.me';
+const KEY = 'whatif.me.v2';
 const known = () => { try { return !!localStorage.getItem(KEY); } catch { return false; } };
 
 /** Full-screen, mandatory name form shown once per browser. Not shown on /royhat. */
@@ -13,6 +13,7 @@ export function NameGate() {
   const [first, setFirst] = useState('');
   const [last, setLast] = useState('');
   const [err, setErr] = useState('');
+  useEffect(() => { void retryPending(); }, []);
   if (done || pathname.startsWith('/royhat') || pathname.startsWith('/static')) return null;
 
   const submit = (e: React.FormEvent) => {
