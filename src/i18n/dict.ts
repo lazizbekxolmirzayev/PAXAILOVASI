@@ -2,6 +2,13 @@
  * UI dictionary. Keys are the English source strings; English is the fallback.
  * To translate more of the UI: wrap a string with t('...') (via useT()) and add it here.
  */
+import { DICT_GAME } from './dictGame';
+import { DICT_PAGES } from './dictPages';
+import { DICT_DATA1 } from './dictData1';
+import { DICT_DATA2 } from './dictData2';
+import { DICT_DATA3 } from './dictData3';
+import { DICT_DATA4 } from './dictData4';
+
 type Entry = { uz: string; ru: string };
 export const DICT: Record<string, Entry> = {
   // ── Top navigation ──
@@ -213,3 +220,5 @@ export const DICT: Record<string, Entry> = {
   'Overview': { uz: 'Umumiy ko‘rinish', ru: 'Обзор' },
   'Profile': { uz: 'Profil', ru: 'Профиль' },
 };
+
+Object.assign(DICT, DICT_PAGES, DICT_DATA1, DICT_DATA2, DICT_DATA3, DICT_DATA4, DICT_GAME);

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { BookOpen, Compass, Crown, FolderOpen, Music, Play, Plus, ScrollText, Users, VolumeX } from 'lucide-react';
+import { BookOpen, Compass, Crown, FolderOpen, Music, Play, Plus, ScrollText, VolumeX } from 'lucide-react';
 import { useGame } from '../store/game';
 import { latestSave, loadWorld, type SaveMeta } from '../services/saves';
 import { SCENARIOS } from '../data/scenarios';
@@ -55,7 +55,6 @@ export default function MainMenu() {
             { to: '/scenarios', icon: ScrollText, t: 'What If History', d: 'Change pivotal events' },
             { to: '/sandbox', icon: Crown, t: 'Imperial Sandbox', d: 'Forge your own empire' },
             { to: '/explorer', icon: Compass, t: 'World Explorer', d: '2,500 years of borders' },
-            { to: '/multiplayer', icon: Users, t: 'Multiplayer', d: 'Shared turn-based worlds' },
           ].map((m) => (
             <Link key={m.to} to={m.to} className="panel group p-4 transition hover:-translate-y-0.5 hover:shadow-glow">
               <m.icon className="h-6 w-6 text-gold-300 transition group-hover:text-gold-100" />

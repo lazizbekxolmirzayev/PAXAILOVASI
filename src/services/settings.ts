@@ -10,7 +10,7 @@ export interface Settings {
 }
 export const useSettings = create<Settings>()(persist((set) => ({
   musicVolume: 0.35, sfxVolume: 0.5, musicOn: false,
-  autosaveMonths: 12, autoPauseEvents: true, autoPauseWar: true,
+  autosaveMonths: 3, autoPauseEvents: true, autoPauseWar: true,
   showCityLabels: true, showRivers: true, showTerrain: true, showTradeRoutes: true, parchmentMap: true,
   reduceMotion: false, uiScale: 1, confirmWar: true,
   set: (p) => set(p),

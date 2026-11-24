@@ -1,33 +1,24 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { BookOpenText, Bot, Building2, Coins, Crown, FlaskConical, GitCompareArrows, Handshake, HeartPulse, History, Layers, ScrollText, Shield, Users, Wheat, X, Save, LogOut, Settings as SettingsIcon, FolderOpen, Download } from 'lucide-react';
+import { Crown, Handshake, Layers, Shield, X, Save, LogOut, Settings as SettingsIcon, FolderOpen, Download } from 'lucide-react';
 import { useGame } from '../../store/game';
 import { GameMap } from './GameMap';
 import { TopBar, useGameClock } from './TopBar';
 import { CountryPanel } from './CountryPanel';
-import { EventModal } from './EventModal';
+import { SendDialog } from './SendDialog';
+import { ReportModal } from './ReportModal';
 import { Outliner } from './Outliner';
 import { Button, Modal, cx } from '../ui';
 import { MAP_MODES } from '../../lib/mapColors';
 import { saveWorld, downloadSaveFile } from '../../services/saves';
-import { useT } from '../../i18n';
+import { useN, useT } from '../../i18n';
 import { LangSwitcher } from '../ui/LangSwitcher';
 
 export const GAME_NAV = [
   { to: '/game/country', label: 'Country', icon: Crown },
-  { to: '/game/economy', label: 'Economy', icon: Coins },
-  { to: '/game/population', label: 'Population', icon: Users },
-  { to: '/game/food', label: 'Food & Agriculture', icon: Wheat },
-  { to: '/game/health', label: 'Health', icon: HeartPulse },
-  { to: '/game/technology', label: 'Technology', icon: FlaskConical },
-  { to: '/game/infrastructure', label: 'Infrastructure', icon: Building2 },
-  { to: '/game/diplomacy', label: 'Diplomacy', icon: Handshake },
   { to: '/game/military', label: 'Military', icon: Shield },
-  { to: '/game/events', label: 'Historical Events', icon: ScrollText },
-  { to: '/game/timeline', label: 'Timeline', icon: History },
-  { to: '/game/compare', label: 'Timeline Comparison', icon: GitCompareArrows },
-  { to: '/game/historian', label: 'AI Historian', icon: Bot },
+  { to: '/game/diplomacy', label: 'Diplomacy', icon: Handshake },
 ];
 
 export function GameLayout() {
@@ -42,10 +33,15 @@ export function GameLayout() {
   const mapMode = useGame((s) => s.mapMode);
   const setMapMode = useGame((s) => s.setMapMode);
   const selected = useGame((s) => s.selectedProvince);
+  const mission = useGame((s) => s.mission);
+  const cancelMission = useGame((s) => s.cancelMission);
+  const names = useN();
+  useGame((s) => s.version);
   const subpage = loc.pathname !== '/game' && loc.pathname !== '/game/';
 
   useEffect(() => { if (!world) navigate('/new', { replace: true }); }, [world, navigate]);
-  useEffect(() => { if (selected !== null) setPanel(true); }, [selected]);
+  const selCountry = useGame((s) => s.selectedCountry);
+  useEffect(() => { if (selected !== null || selCountry) setPanel(true); }, [selected, selCountry]);
   if (!world) return null;
 
   return (
@@ -94,7 +90,14 @@ export function GameLayout() {
           </div>
         )}
       </div>
-      <EventModal />
+      {mission && world && (
+        <div className="pointer-events-auto absolute left-1/2 top-16 z-30 flex -translate-x-1/2 items-center gap-3 rounded-md border border-gold-400/60 bg-ink-950/95 px-4 py-2 shadow-panel">
+          <span className="text-sm text-gold-100">{mission.kind === 'attack' ? t('March from {city}: click the target city on the map.', { city: names(world.provinces[mission.from]?.name ?? '') }) : t('Send help from {city}: click one of your own cities.', { city: names(world.provinces[mission.from]?.name ?? '') })}</span>
+          <Button size="sm" onClick={cancelMission}>{t('Cancel')}</Button>
+        </div>
+      )}
+      <SendDialog />
+      <ReportModal />
       <GameMenu open={menu} onClose={() => setMenu(false)} />
     </div>
   );
@@ -106,24 +109,22 @@ function GameMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
   const world = useGame((s) => s.world);
   const toast = useGame((s) => s.toast);
   const close = useGame((s) => s.closeGame);
-  const remote = useGame((s) => s.remote);
   const [saving, setSaving] = useState(false);
   const quickSave = async () => {
     if (!world) return;
     setSaving(true);
-    try { await saveWorld(world, `quick-${world.id}`, `${world.name} — quicksave`); toast(t('Game saved.'), 'good'); } catch (e) { toast(`${t('Save failed')}: ${(e as Error).message}`, 'bad'); }
+    try { await saveWorld(world, `quick-${world.id}`, `${world.name} — ${t('quicksave')}`); toast(t('Game saved.'), 'good'); } catch (e) { toast(`${t('Save failed')}: ${(e as Error).message}`, 'bad'); }
     setSaving(false);
   };
   return (
-    <Modal open={open} onClose={onClose} title="Game menu">
+    <Modal open={open} onClose={onClose} title={t('Game menu')}>
       <div className="grid gap-2">
         <LangSwitcher className="w-fit" />
-        <Button variant="gold" icon={<Save className="h-4 w-4" />} loading={saving} disabled={remote?.mode === 'online'} onClick={() => void quickSave()}>Quick save</Button>
-        <Button icon={<FolderOpen className="h-4 w-4" />} onClick={() => navigate('/saves')}>Save / load…</Button>
-        <Button icon={<Download className="h-4 w-4" />} onClick={() => world && downloadSaveFile(world)}>Export save file</Button>
-        <Button icon={<BookOpenText className="h-4 w-4" />} onClick={() => { onClose(); navigate('/game/timeline'); }}>Chronicle of this world</Button>
-        <Button icon={<SettingsIcon className="h-4 w-4" />} onClick={() => navigate('/settings')}>Settings</Button>
-        <Button variant="danger" icon={<LogOut className="h-4 w-4" />} onClick={() => { if (world) void saveWorld(world, 'autosave', 'Autosave', true); close(); navigate('/'); }}>Exit to main menu (autosaves)</Button>
+        <Button variant="gold" icon={<Save className="h-4 w-4" />} loading={saving} onClick={() => void quickSave()}>{t('Quick save')}</Button>
+        <Button icon={<FolderOpen className="h-4 w-4" />} onClick={() => navigate('/saves')}>{t('Save / load…')}</Button>
+        <Button icon={<Download className="h-4 w-4" />} onClick={() => world && downloadSaveFile(world)}>{t('Export save file')}</Button>
+        <Button icon={<SettingsIcon className="h-4 w-4" />} onClick={() => navigate('/settings')}>{t('Settings')}</Button>
+        <Button variant="danger" icon={<LogOut className="h-4 w-4" />} onClick={() => { if (world) void saveWorld(world, 'autosave', 'Autosave', true); close(); navigate('/'); }}>{t('Exit to main menu (autosaves)')}</Button>
       </div>
       <p className="mt-3 text-[11px] text-parchment-300/60">{t('Shortcuts: Space = pause/resume · 1–4 = speed 1×/2×/5×/10×')}</p>
     </Modal>

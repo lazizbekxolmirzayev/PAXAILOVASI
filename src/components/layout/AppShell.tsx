@@ -1,6 +1,6 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Award, BookOpen, Castle, Compass, Crown, Globe2, Home, Menu, ScrollText, Settings, Swords, User, Users, X } from 'lucide-react';
+import { Award, BookOpen, Castle, Compass, Crown, Globe2, Home, Menu, ScrollText, Settings, Swords, User, X } from 'lucide-react';
 import { useState } from 'react';
 import { WorldMap } from '../map/WorldMap';
 import { useDataset } from '../../hooks/useDataset';
@@ -16,7 +16,6 @@ export const NAV = [
   { to: '/library', label: 'Scenario Library', icon: BookOpen },
   { to: '/explorer', label: 'World Explorer', icon: Compass },
   { to: '/saves', label: 'My Worlds', icon: Castle },
-  { to: '/multiplayer', label: 'Multiplayer', icon: Users },
   { to: '/achievements', label: 'Achievements', icon: Award },
   { to: '/settings', label: 'Settings', icon: Settings },
 ];

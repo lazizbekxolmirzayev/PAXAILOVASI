@@ -10,6 +10,7 @@ import { loadPhysical, loadTopology, loadMeta } from '../../services/mapData';
 import type { ProvinceMeta } from '../../engine/create';
 import { citiesForYear, cityName } from '../../data/cities';
 import { useSettings } from '../../services/settings';
+import { trName, useLang, useT } from '../../i18n';
 
 export const MAP_W = 1600, MAP_H = 820;
 
@@ -78,6 +79,12 @@ export interface WorldMapProps {
   onHover?: (id: number | null, e?: React.MouseEvent) => void;
   decorative?: boolean;
   focusProvince?: number | null;
+  /** moving armies: position p in 0..1 between provinces a and b */
+  armies?: { id: string; a: number; b: number; p: number; tone: 'mine' | 'foe' | 'ally'; sea: boolean; label?: string }[];
+  /** provinces with a battle in progress */
+  fights?: number[];
+  /** province the player is marching from (pulse) */
+  missionFrom?: number | null;
   className?: string;
   showControls?: boolean;
 }
@@ -92,6 +99,8 @@ export const WorldMap = memo(function WorldMap(props: WorldMapProps) {
   const zoomRef = useRef<ZoomBehavior<SVGSVGElement, unknown> | null>(null);
   const [k, setK] = useState(1);
   const settings = useSettings();
+  const lang = useLang((x) => x.lang);
+  const t = useT();
   const prep = useMemo(() => (geo ? prepare(geo) : null), [geo]);
 
   // imperative fill updates (avoids reconciling ~2,600 paths every tick)
@@ -138,7 +147,7 @@ export const WorldMap = memo(function WorldMap(props: WorldMapProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prep, props.borderVersion, props.labels]);
 
-  const cities = useMemo(() => citiesForYear(props.year).map((c) => { const p = projection([c.lon, c.lat]); return p ? { id: c.id, name: cityName(c, props.year), x: p[0], y: p[1] } : null; }).filter(Boolean) as { id: string; name: string; x: number; y: number }[], [props.year]);
+  const cities = useMemo(() => citiesForYear(props.year).map((c) => { const p = projection([c.lon, c.lat]); return p ? { id: c.id, name: trName(cityName(c, props.year)), x: p[0], y: p[1] } : null; }).filter(Boolean) as { id: string; name: string; x: number; y: number }[], [props.year, lang]);
 
   const routes = useMemo(() => {
     if (!prep || !props.routes?.length || !geo) return '';
@@ -192,8 +201,8 @@ export const WorldMap = memo(function WorldMap(props: WorldMapProps) {
   const zoomBy = (f: number) => { if (svgRef.current && zoomRef.current) select(svgRef.current).transition().duration(300).call(zoomRef.current.scaleBy as never, f); };
   const reset = () => { if (svgRef.current && zoomRef.current) select(svgRef.current).transition().duration(500).call(zoomRef.current.transform as never, zoomIdentity); };
 
-  if (error) return <div className="flex h-full items-center justify-center text-sm text-blood-400">Map data failed to load: {error}</div>;
-  if (!prep) return <div className="flex h-full items-center justify-center"><div className="title-display animate-pulse text-sm text-gold-200">Charting the known world…</div></div>;
+  if (error) return <div className="flex h-full items-center justify-center text-sm text-blood-400">{t('Map data failed to load')}: {error}</div>;
+  if (!prep) return <div className="flex h-full items-center justify-center"><div className="title-display animate-pulse text-sm text-gold-200">{t('Charting the known world…')}</div></div>;
 
   const parchment = settings.parchmentMap;
   const inv = 1 / k;
@@ -221,6 +230,28 @@ export const WorldMap = memo(function WorldMap(props: WorldMapProps) {
           <path d={borders.country} className="map-border" fill="none" stroke={parchment ? 'rgba(30,20,10,.85)' : 'rgba(10,10,20,.9)'} strokeWidth={1.1} />
           {borders.selected && <path d={borders.selected} className="map-border" fill="none" stroke="#fbf6e6" strokeWidth={2.2} style={{ filter: 'drop-shadow(0 0 3px rgba(217,182,92,.9))' }} />}
           {settings.showTradeRoutes && routes && <path d={routes} fill="none" stroke="rgba(233,200,106,.75)" strokeWidth={1.2 * inv} strokeDasharray={`${4 * inv} ${3 * inv}`} pointerEvents="none" />}
+          {geo && props.missionFrom != null && prep.centroids[props.missionFrom] && (
+            <circle cx={prep.centroids[props.missionFrom][0]} cy={prep.centroids[props.missionFrom][1]} r={6 * inv} fill="rgba(251,246,230,.2)" stroke="#e9c86a" strokeWidth={1.6 * inv} strokeDasharray={`${3 * inv} ${2 * inv}`} pointerEvents="none"><animate attributeName="r" values={`${4 * inv};${9 * inv};${4 * inv}`} dur="1.4s" repeatCount="indefinite" /></circle>
+          )}
+          {geo && props.armies?.map((a) => {
+            const pa = projection([geo.meta[a.a].x, geo.meta[a.a].y]), pb = projection([geo.meta[a.b].x, geo.meta[a.b].y]);
+            if (!pa || !pb) return null;
+            const x = pa[0] + (pb[0] - pa[0]) * a.p, y = pa[1] + (pb[1] - pa[1]) * a.p;
+            const col = a.tone === 'mine' ? '#e9c86a' : a.tone === 'ally' ? '#5fc79a' : '#e0503f';
+            return (
+              <g key={a.id} pointerEvents="none">
+                <line x1={pa[0]} y1={pa[1]} x2={pb[0]} y2={pb[1]} stroke={col} strokeOpacity={0.8} strokeWidth={1.1 * inv} strokeDasharray={`${3 * inv} ${2.5 * inv}`} />
+                {a.sea ? <rect x={x - 3 * inv} y={y - 3 * inv} width={6 * inv} height={6 * inv} transform={`rotate(45 ${x} ${y})`} fill={col} stroke="#120c05" strokeWidth={0.8 * inv} /> : <circle cx={x} cy={y} r={3.2 * inv} fill={col} stroke="#120c05" strokeWidth={0.8 * inv} />}
+                {a.label && k >= 1.5 && <text x={x + 4 * inv} y={y - 3 * inv} fontSize={8 * inv} fill="#fbf6e6" stroke="rgba(0,0,0,.8)" strokeWidth={2 * inv} paintOrder="stroke">{a.label}</text>}
+              </g>
+            );
+          })}
+          {props.fights?.map((id) => prep.centroids[id] && (
+            <g key={`f${id}`} pointerEvents="none" transform={`translate(${prep.centroids[id][0]} ${prep.centroids[id][1]}) scale(${inv})`}>
+              <circle r="7" fill="rgba(224,80,63,.35)" stroke="#e0503f" strokeWidth="1.4"><animate attributeName="r" values="5;11;5" dur="0.9s" repeatCount="indefinite" /></circle>
+              <path d="M-4 -4 L4 4 M4 -4 L-4 4" stroke="#fbf6e6" strokeWidth="1.8" strokeLinecap="round" />
+            </g>
+          ))}
           {props.selectedProvince != null && prep.centroids[props.selectedProvince] && (
             <circle cx={prep.centroids[props.selectedProvince][0]} cy={prep.centroids[props.selectedProvince][1]} r={4 * inv} fill="none" stroke="#fbf6e6" strokeWidth={1.5 * inv} pointerEvents="none" />
           )}
@@ -243,9 +274,9 @@ export const WorldMap = memo(function WorldMap(props: WorldMapProps) {
       <div className="pointer-events-none absolute inset-0" style={{ boxShadow: 'inset 0 0 120px 30px rgba(0,0,0,.65)' }} />
       {props.showControls !== false && !props.decorative && (
         <div className="absolute bottom-4 right-4 flex flex-col gap-1.5">
-          <button className="nav-icon !h-9 !w-9" onClick={() => zoomBy(1.6)} aria-label="Zoom in"><Plus className="h-4 w-4" /></button>
-          <button className="nav-icon !h-9 !w-9" onClick={() => zoomBy(1 / 1.6)} aria-label="Zoom out"><Minus className="h-4 w-4" /></button>
-          <button className="nav-icon !h-9 !w-9" onClick={reset} aria-label="Reset view"><Maximize2 className="h-4 w-4" /></button>
+          <button className="nav-icon !h-9 !w-9" onClick={() => zoomBy(1.6)} aria-label={t('Zoom in')}><Plus className="h-4 w-4" /></button>
+          <button className="nav-icon !h-9 !w-9" onClick={() => zoomBy(1 / 1.6)} aria-label={t('Zoom out')}><Minus className="h-4 w-4" /></button>
+          <button className="nav-icon !h-9 !w-9" onClick={reset} aria-label={t('Reset view')}><Maximize2 className="h-4 w-4" /></button>
         </div>
       )}
     </div>

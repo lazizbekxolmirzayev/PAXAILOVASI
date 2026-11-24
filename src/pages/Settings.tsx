@@ -24,17 +24,14 @@ export default function SettingsPage() {
           <div className="mt-3"><span className="label">{t('Sound effects')}</span><Slider value={s.sfxVolume} min={0} max={1} onChange={(v) => s.set({ sfxVolume: v })} format={(v) => `${Math.round(v * 100)}%`} /></div>
         </Panel>
         <Panel title="Gameplay">
-          <Toggle label="Pause when a decision event appears" checked={s.autoPauseEvents} onChange={(v) => s.set({ autoPauseEvents: v })} />
           <Toggle label="Pause when war breaks out" checked={s.autoPauseWar} onChange={(v) => s.set({ autoPauseWar: v })} />
-          <Toggle label="Confirm before declaring war" checked={s.confirmWar} onChange={(v) => s.set({ confirmWar: v })} />
-          <div className="mt-2"><span className="label">{t('Autosave every')}</span><Slider value={s.autosaveMonths} min={0} max={60} step={6} onChange={(v) => s.set({ autosaveMonths: v })} format={(v) => (v ? `${v} ${t('mo')}` : t('off'))} /></div>
+          <div className="mt-2"><span className="label">{t('Autosave every')}</span><Slider value={s.autosaveMonths} min={0} max={15} step={1} onChange={(v) => s.set({ autosaveMonths: v })} format={(v) => (v ? `${v} ${t('min')}` : t('off'))} /></div>
         </Panel>
         <Panel title="Map">
           <Toggle label="Parchment map style" checked={s.parchmentMap} onChange={(v) => s.set({ parchmentMap: v })} />
           <Toggle label="City labels" checked={s.showCityLabels} onChange={(v) => s.set({ showCityLabels: v })} />
           <Toggle label="Rivers & lakes" checked={s.showRivers} onChange={(v) => s.set({ showRivers: v })} />
           <Toggle label="Deserts & mountain ranges" checked={s.showTerrain} onChange={(v) => s.set({ showTerrain: v })} />
-          <Toggle label="Trade routes" checked={s.showTradeRoutes} onChange={(v) => s.set({ showTradeRoutes: v })} />
         </Panel>
         <Panel title="Accessibility & data">
           <Toggle label="Reduce motion" checked={s.reduceMotion} onChange={(v) => s.set({ reduceMotion: v })} />

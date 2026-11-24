@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { BookOpen, Crown, Landmark, PenTool, ScrollText, Users } from 'lucide-react';
+import { BookOpen, Crown, Landmark, PenTool, ScrollText } from 'lucide-react';
 import { SectionTitle } from '../components/ui';
 import { useT } from '../i18n';
 
@@ -10,7 +10,6 @@ const MODES = [
   { to: '/eras', icon: Landmark, title: 'Historical Nation', text: 'Choose an era and a starting year, then take command of any historical country on documented borders.', tag: 'Grand campaign' },
   { to: '/library', icon: BookOpen, title: 'Scenario Library', text: 'Browse built-in, your own and community scenarios. Favourite and share them.', tag: 'Library' },
   { to: '/editor', icon: PenTool, title: 'Scenario Editor', text: 'Author your own alternative history with dated events, conditions and branching outcomes.', tag: 'Create' },
-  { to: '/multiplayer', icon: Users, title: 'Multiplayer', text: 'Turn-based shared worlds — online rooms (Supabase) or local hot-seat on one device.', tag: 'Together' },
 ];
 
 export default function NewGame() {
