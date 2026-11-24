@@ -34,10 +34,11 @@ export async function addVisitor(name: string): Promise<void> {
   if (!(await post(name))) { try { localStorage.setItem(PENDING, name); } catch { /* ignore */ } }
 }
 export async function retryPending(): Promise<void> {
-  if (!API) return;
   let n: string | null = null;
   try { n = localStorage.getItem(PENDING); } catch { /* ignore */ }
-  if (n && (await post(n))) { try { localStorage.removeItem(PENDING); } catch { /* ignore */ } }
+  if (!n) return;
+  if (!API) { addLocal(n); try { localStorage.removeItem(PENDING); } catch { /* ignore */ } return; }
+  if (await post(n)) { try { localStorage.removeItem(PENDING); } catch { /* ignore */ } }
 }
 export async function listVisitors(pin: string): Promise<Visitor[]> {
   if (!API) return listLocal();
