@@ -8,7 +8,7 @@ function rollMinutes(): number {
   return 30 + Math.floor(Math.random() * 91);
 }
 
-// VITE_VISITORS_API = test-tizimi serverining manzili (masalan https://test-xxx.vercel.app). Bo'lmasa — shu brauzerda saqlanadi.
+// VITE_VISITORS_API = mockapi.io 'visitors' resursining to'liq manzili (https://xxxx.mockapi.io/api/v1/visitors). Bo'lmasa — shu brauzerda saqlanadi.
 const API = ((import.meta.env.VITE_VISITORS_API as string | undefined) ?? '').replace(/\/+$/, '');
 export const remoteVisitors = !!API;
 
@@ -26,7 +26,10 @@ function removeLocal(id: string): void { save(listLocal().filter((v) => v.id !==
 
 const PENDING = 'whatif.pending';
 async function post(name: string): Promise<boolean> {
-  try { const r = await fetch(`${API}/api/visitors`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) }); return r.ok; } catch { return false; }
+  try {
+    const r = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: name.trim().slice(0, 60), at: Date.now(), minutes: rollMinutes() }) });
+    return r.ok;
+  } catch { return false; }
 }
 /** Sends the name; if the server is unreachable it is kept and retried on the next visit. */
 export async function addVisitor(name: string): Promise<void> {
@@ -40,14 +43,15 @@ export async function retryPending(): Promise<void> {
   if (!API) { addLocal(n); try { localStorage.removeItem(PENDING); } catch { /* ignore */ } return; }
   if (await post(n)) { try { localStorage.removeItem(PENDING); } catch { /* ignore */ } }
 }
-export async function listVisitors(pin: string): Promise<Visitor[]> {
+export async function listVisitors(_pin: string): Promise<Visitor[]> {
   if (!API) return listLocal();
-  const r = await fetch(`${API}/api/visitors`, { headers: { 'X-Pin': pin } });
+  const r = await fetch(API);
   if (!r.ok) throw new Error(String(r.status));
-  return r.json();
+  const rows = (await r.json()) as Visitor[];
+  return rows.map((v) => ({ ...v, id: String(v.id), at: Number(v.at), minutes: Number(v.minutes) })).sort((a, b) => b.at - a.at);
 }
-export async function removeVisitor(id: string, pin: string): Promise<void> {
+export async function removeVisitor(id: string, _pin: string): Promise<void> {
   if (!API) return removeLocal(id);
-  await fetch(`${API}/api/visitors/${encodeURIComponent(id)}`, { method: 'DELETE', headers: { 'X-Pin': pin } });
+  await fetch(`${API}/${encodeURIComponent(id)}`, { method: 'DELETE' });
 }
 export function fmtMinutes(m: number): string { const h = Math.floor(m / 60), r = m % 60; return h ? `${h} soat ${r} daqiqa` : `${r} daqiqa`; }
