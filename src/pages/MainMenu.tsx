@@ -12,7 +12,6 @@ import { useSettings } from '../services/settings';
 import { startMusic, stopMusic } from '../services/audio';
 import { fmtYear } from '../engine/date';
 import { useT } from '../i18n';
-import { addVisitor } from '../services/visitors';
 
 export default function MainMenu() {
   const navigate = useNavigate();
@@ -20,7 +19,6 @@ export default function MainMenu() {
   const world = useGame((s) => s.world);
   const setWorld = useGame((s) => s.setWorld);
   const toast = useGame((s) => s.toast);
-  const [who, setWho] = useState('');
   const [last, setLast] = useState<SaveMeta | null>(null);
   const musicOn = useSettings((s) => s.musicOn);
   const set = useSettings((s) => s.set);
@@ -40,11 +38,7 @@ export default function MainMenu() {
         <h1 className="title-display gold-text text-6xl font-extrabold leading-none md:text-8xl" style={{ textShadow: '0 4px 40px rgba(217,182,92,.25)' }}>What If?</h1>
         <div className="divider-gold my-6 w-72" />
         <p className="max-w-xl font-serif text-xl leading-relaxed text-parchment-100/90">{t('Rewrite a single moment of history and watch the consequences ripple through economies, dynasties, wars and centuries — on real historical borders, driven by a living simulation.')}</p>
-        <form className="mt-6 flex max-w-md gap-2" onSubmit={(e) => { e.preventDefault(); void addVisitor(who); setWho(''); }}>
-          <input value={who} onChange={(e) => setWho(e.target.value)} maxLength={60} className="input flex-1" placeholder="Ism familya" aria-label="Ism familya" />
-          <Button type="submit" variant="gold">OK</Button>
-        </form>
-        <div className="mt-4 grid max-w-md gap-2.5">
+        <div className="mt-8 grid max-w-md gap-2.5">
           <Button variant="gold" size="lg" icon={<Plus className="h-5 w-5" />} onClick={() => navigate('/new')}>{t('New Game')}</Button>
           <Button size="lg" icon={<Play className="h-5 w-5" />} disabled={!world && !last} onClick={() => void cont()}>
             {t('Continue Game')} {world ? `— ${world.name}` : last ? `— ${last.name} (${last.date})` : ''}

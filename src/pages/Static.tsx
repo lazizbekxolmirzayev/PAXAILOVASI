@@ -31,7 +31,7 @@ export default function StaticPage() {
   }
   return (
     <div className="mx-auto max-w-2xl py-8">
-      <Panel ornate title="Statistika" subtitle={`${rows.length}`}>
+      <Panel ornate title="Ro‘yxat" subtitle={`${rows.length}`}>
         {err && <div className="mb-2 text-xs text-blood-400">Ma‘lumot olinmadi</div>}
         {rows.length === 0 ? <EmptyState title="Hozircha ro‘yxat bo‘sh" /> : (
           <ul className="divide-y divide-gold-600/20">
@@ -40,9 +40,9 @@ export default function StaticPage() {
                 <span className="w-6 text-xs text-parchment-300/50">{i + 1}</span>
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-parchment-50">{v.name}</div>
-                  <div className="text-[11px] text-parchment-300/60">{new Date(v.at).toLocaleString()}</div>
+                  <div className="text-[11px] text-parchment-300/60">Kirgan: {new Date(v.at).toLocaleString()}</div>
                 </div>
-                <span className="text-sm text-gold-200">{fmtMinutes(v.minutes)}</span>
+                <span className="text-sm text-gold-200" title="O‘yinda">{fmtMinutes(v.minutes)}</span>
                 <button aria-label="O‘chirish" title="O‘chirish" onClick={() => { void removeVisitor(v.id, PIN).then(load); }} className="rounded p-1.5 text-parchment-300/70 hover:bg-blood-500/20 hover:text-blood-400"><Trash2 className="h-4 w-4" /></button>
               </li>
             ))}

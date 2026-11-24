@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { AppShell } from './components/layout/AppShell';
 import { GameLayout } from './components/game/GameLayout';
 import { LoadingScreen } from './components/layout/LoadingScreen';
+import { NameGate } from './components/layout/NameGate';
 import { Toasts } from './components/layout/Toasts';
 import { Loading } from './components/ui';
 import { ErrorBoundary } from './components/layout/ErrorBoundary';
@@ -31,6 +32,7 @@ export default function App() {
   useEffect(() => { document.documentElement.classList.toggle('reduce-motion', reduce); }, [reduce]);
   return (
     <ErrorBoundary>
+      <NameGate />
       <Suspense fallback={<div className="fixed inset-0 flex items-center justify-center"><Loading label="Unrolling the scrolls" /></div>}>
         <Routes>
           <Route element={<AppShell />}>
