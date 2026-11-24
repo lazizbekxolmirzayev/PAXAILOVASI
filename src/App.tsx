@@ -20,6 +20,7 @@ const WorldExplorer = lazy(() => import('./pages/WorldExplorer'));
 const SaveLoad = lazy(() => import('./pages/SaveLoad'));
 const PlayerProfile = lazy(() => import('./pages/PlayerProfile'));
 const Achievements = lazy(() => import('./pages/Achievements'));
+const StaticPage = lazy(() => import('./pages/Static'));
 const SettingsPage = lazy(() => import('./pages/Settings'));
 const CountryPage = lazy(() => import('./pages/game/Country'));
 const DiplomacyPage = lazy(() => import('./pages/game/Diplomacy'));
@@ -48,6 +49,7 @@ export default function App() {
             <Route path="profile" element={<PlayerProfile />} />
             <Route path="achievements" element={<Achievements />} />
             <Route path="settings" element={<SettingsPage />} />
+            <Route path="static" element={<StaticPage />} />
           </Route>
           <Route path="game" element={<GameLayout />}>
             <Route index element={null} />
