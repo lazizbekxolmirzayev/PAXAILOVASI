@@ -1,0 +1,75 @@
+# WHAT IF? — Alternative History Grand Strategy
+
+A browser grand-strategy game: rewrite pivotal moments of history or forge your own empire on
+real historical borders, then let an interconnected simulation (economy, food, population,
+health, technology, stability, diplomacy, war, events and AI states) play out the consequences.
+
+## Quick start
+
+```bash
+npm install
+npm run dev        # http://localhost:5173
+npm test           # engine + services tests (determinism, scenarios, saves, validation)
+npm run build      # production build in dist/
+```
+
+Everything works **offline** without any backend: local saves (IndexedDB, gzip-compressed),
+guest profile, hot-seat multiplayer and the built-in (rule-based) AI Historian.
+
+## Feature map
+
+| Area | Where |
+|---|---|
+| Simulation engine (pure TS, deterministic, no DOM) | `src/engine/*` |
+| Monthly systems: economy, food, population, health, tech, stability, military, infrastructure | `src/engine/systems.ts` |
+| War, battles (troops × quality × morale × supply × logistics × terrain × forts), occupation, peace | `src/engine/military.ts` |
+| Diplomacy with transparent AI acceptance factors | `src/engine/diplomacy.ts` |
+| AI decision engine (goals → budget, army, building, diplomacy, war; every decision logged with its reason) | `src/engine/ai.ts` |
+| Event engine (trigger conditions, probabilities, choices, effects; custom events) | `src/engine/events.ts` |
+| Succession, rebellions, breakaway states, country creation & collapse | `src/engine/internal.ts` |
+| Historical scenarios & divergence consequences | `src/data/scenarios.ts`, `src/engine/scenario.ts` |
+| Player commands (single validation path for client & server) | `src/engine/commands.ts` |
+| AI Historian (rule-based) + 12-month consequence projection | `src/engine/historian.ts` |
+| UI pages (27+) | `src/pages/*`, `src/pages/game/*` |
+| Interactive map (D3 + TopoJSON, zoom/pan, overlays, trade routes, occupation) | `src/components/map/WorldMap.tsx` |
+| Supabase schema, RLS, storage, realtime | `supabase/migrations/*` |
+| Server-authoritative multiplayer & AI historian proxy | `supabase/functions/*` |
+
+Time controls: Pause / 1× / 2× / 5× / 10×, +1 month / +1 year / +10 years. Keyboard: Space, 1–4.
+
+## Data & honesty
+
+* **Borders**: [historical-basemaps](https://github.com/aourednik/historical-basemaps) by André Ourednik (GPL-3.0) for 20 dates from 500 BC to 2000. Known coarse labels are corrected in `src/data/polities.ts` (`CORRECTIONS`) and every correction is shown in the World Explorer.
+* **Provinces**: Natural Earth admin-1 regions (public domain) — modern shapes used as an approximation of historical provinces. Ownership in a year = the polity containing the province's representative point.
+* **Population**: world totals and regional shares are rounded consensus estimates (McEvedy & Jones, Maddison, UN/HYDE) distributed by area, rivers, coasts, deserts and known cities — labelled as approximations.
+* Economic, military and technology numbers are **game-model values**, not historical measurements.
+* Documented history (scenario backgrounds, original timelines) and simulated events are always labelled separately (“Documented history” vs “Alternative / simulated”).
+
+Rebuild map data: see `scripts/README.md` (`scripts/build_provinces.py`).
+
+## Supabase (optional: accounts, cloud saves, community scenarios, online multiplayer, LLM historian)
+
+1. Create a project and copy `.env.example` → `.env` with `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
+2. Apply schema & seed:
+   ```bash
+   supabase link --project-ref <ref>
+   supabase db push
+   psql "$DATABASE_URL" -f supabase/seed.sql      # built-in scenarios, cities, documented events
+   ```
+3. Upload map data for the server engine: upload every file in `public/maps/` to the public bucket `game-data`.
+4. Deploy functions (the engine is bundled so the server runs the exact same rules):
+   ```bash
+   npm run sync:engine
+   supabase functions deploy multiplayer-turn
+   supabase functions deploy ai-historian
+   supabase secrets set ANTHROPIC_API_KEY=...    # server-side only, never in the frontend
+   ```
+5. Optional: `VITE_ENABLE_AI_HISTORIAN=true` in `.env` to offer the language-model historian (the built-in one remains the labelled fallback).
+
+Security: Row Level Security on every table; players can only read worlds of rooms they belong to; world state, turn numbers and country assignments are written only by the Edge Function (service role); triggers block clients from editing turn bookkeeping; rate limiting via `check_rate_limit`; the AI key lives only in function secrets.
+
+Capacity: the schema is indexed and turn-based multiplayer keeps server work per turn bounded, but no concurrent-user capacity is claimed without load testing.
+
+## Tests
+
+`npm test` covers: world creation from datasets, deterministic ticks, save→load→continue producing identical hashes, all 8 scenarios, command validation, AI historian answers, consequence projection, scenario validation and share codes.
