@@ -69,9 +69,9 @@ export function GameLayout() {
                 </motion.div>
               )}
             </AnimatePresence>
-            <div className="ml-auto flex max-h-full flex-col items-end gap-3">
-              <Outliner />
-              {panel && <div className="min-h-0 flex-1"><CountryPanel onClose={() => setPanel(false)} /></div>}
+            <div className="pointer-events-none ml-auto flex max-h-full w-full flex-col items-end justify-end gap-3 md:w-auto md:justify-start">
+              <div className={panel ? 'hidden md:block' : 'w-full md:w-auto'}><Outliner /></div>
+              {panel && <div className="min-h-0 w-full max-h-[52dvh] md:max-h-none md:w-auto md:flex-1"><CountryPanel onClose={() => setPanel(false)} /></div>}
             </div>
           </div>
         </div>

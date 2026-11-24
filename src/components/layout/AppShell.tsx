@@ -23,8 +23,8 @@ export const NAV = [
 export function Logo({ small }: { small?: boolean }) {
   return (
     <NavLink to="/" className="flex items-center gap-2.5">
-      <span className={cx('flex items-center justify-center rounded-full bg-gradient-to-b from-gold-100 to-gold-600 text-ink-950 shadow-glow ring-1 ring-gold-700', small ? 'h-8 w-8' : 'h-10 w-10')}><Globe2 className={small ? 'h-4 w-4' : 'h-5 w-5'} /></span>
-      <span className={cx('title-display gold-text font-extrabold', small ? 'text-lg' : 'text-xl')}>What If?</span>
+      <span className={cx('flex items-center justify-center rounded-full bg-gradient-to-b from-gold-100 to-gold-600 text-ink-950 shadow-glow ring-1 ring-gold-700', small ? 'h-8 w-8' : 'h-8 w-8 sm:h-10 sm:w-10')}><Globe2 className={small ? 'h-4 w-4' : 'h-5 w-5'} /></span>
+      <span className={cx('title-display gold-text font-extrabold', small ? 'text-lg' : 'whitespace-nowrap text-lg sm:text-xl')}>What If?</span>
     </NavLink>
   );
 }
@@ -52,14 +52,14 @@ export function AppShell() {
     <div className="min-h-full">
       <MapBackdrop dim={loc.pathname === '/' ? 0.35 : 0.72} />
       <header className="sticky top-0 z-40 border-b border-gold-600/20 bg-ink-950/75 backdrop-blur-md">
-        <div className="mx-auto flex max-w-[1500px] items-center gap-6 px-4 py-3 md:px-8">
+        <div className="mx-auto flex max-w-[1500px] items-center gap-2 px-3 py-2.5 sm:gap-6 sm:px-4 sm:py-3 md:px-8">
           <Logo />
           <nav className="hidden flex-1 items-center gap-1 xl:flex">
             {NAV.slice(1).map((n) => (
               <NavLink key={n.to} to={n.to} className={({ isActive }) => cx('rounded px-2.5 py-1.5 text-[12px] font-semibold uppercase tracking-[0.1em] transition', isActive ? 'text-gold-100 bg-gold-500/10 ring-1 ring-gold-400/30' : 'text-parchment-200/70 hover:text-gold-100')}>{t(n.label)}</NavLink>
             ))}
           </nav>
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex min-w-0 items-center gap-1.5 sm:gap-2">
             <LangSwitcher />
             <NavLink to="/profile" className="btn-ghost !py-1.5"><User className="h-4 w-4" /><span className="hidden sm:inline">{name}</span></NavLink>
             <button className="btn-ghost !px-2 !py-1.5 xl:hidden" onClick={() => setOpen(!open)} aria-label={t('Menu')}>{open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}</button>
