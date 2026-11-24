@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { addVisitor, retryPending } from '../../services/visitors';
 
 const KEY = 'whatif.me.v2';
+const VISIT = 'whatif.visit';
 const known = () => { try { return !!localStorage.getItem(KEY); } catch { return false; } };
 
 /** Full-screen, mandatory name form shown once per browser. Not shown on /royhat. */
@@ -13,7 +14,15 @@ export function NameGate() {
   const [first, setFirst] = useState('');
   const [last, setLast] = useState('');
   const [err, setErr] = useState('');
-  useEffect(() => { void retryPending(); }, []);
+  useEffect(() => {
+    void retryPending();
+    // Returning visitor: log one more visit per browser session (not for the list page itself).
+    try {
+      const me = localStorage.getItem(KEY);
+      if (me && !sessionStorage.getItem(VISIT) && !pathname.startsWith('/royhat') && !pathname.startsWith('/static')) { sessionStorage.setItem(VISIT, '1'); void addVisitor(me); }
+    } catch { /* ignore */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   if (done || pathname.startsWith('/royhat') || pathname.startsWith('/static')) return null;
 
   const submit = (e: React.FormEvent) => {
@@ -21,7 +30,7 @@ export function NameGate() {
     const f = first.trim(), l = last.trim();
     if (f.length < 2 || l.length < 2) { setErr('Ism va familyani to‘liq yozing'); return; }
     void addVisitor(`${f} ${l}`);
-    try { localStorage.setItem(KEY, `${f} ${l}`); } catch { /* ignore */ }
+    try { localStorage.setItem(KEY, `${f} ${l}`); sessionStorage.setItem(VISIT, '1'); } catch { /* ignore */ }
     setDone(true);
   };
 
