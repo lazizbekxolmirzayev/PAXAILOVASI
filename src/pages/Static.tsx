@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Lock, Trash2 } from 'lucide-react';
+import { Lock, RefreshCw, Trash2 } from 'lucide-react';
 import { Button, EmptyState, Panel } from '../components/ui';
 import { fmtMinutes, listVisitors, removeVisitor, type Visitor } from '../services/visitors';
 
@@ -11,7 +11,8 @@ export default function StaticPage() {
   const [bad, setBad] = useState(false);
   const [rows, setRows] = useState<Visitor[]>([]);
   const [err, setErr] = useState(false);
-  const load = async () => { try { setRows(await listVisitors(PIN)); setErr(false); } catch { setErr(true); } };
+  const [busy, setBusy] = useState(false);
+  const load = async () => { setBusy(true); try { setRows(await listVisitors(PIN)); setErr(false); } catch { setErr(true); } finally { setBusy(false); } };
 
   if (!ok) {
     return (
@@ -31,7 +32,7 @@ export default function StaticPage() {
   }
   return (
     <div className="mx-auto max-w-2xl py-8">
-      <Panel ornate title="Ro‘yxat" subtitle={`${rows.length}`}>
+      <Panel ornate title="Ro‘yxat" subtitle={`${rows.length}`} actions={<button onClick={() => void load()} disabled={busy} aria-label="Yangilash" title="Yangilash" className="rounded p-1.5 text-gold-300 hover:bg-ink-800 hover:text-gold-100 disabled:opacity-60"><RefreshCw className={`h-4 w-4 ${busy ? 'animate-spin' : ''}`} /></button>}>
         {err && <div className="mb-2 text-xs text-blood-400">Ma‘lumot olinmadi</div>}
         {rows.length === 0 ? <EmptyState title="Hozircha ro‘yxat bo‘sh" /> : (
           <ul className="divide-y divide-gold-600/20">
