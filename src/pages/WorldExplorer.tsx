@@ -27,7 +27,7 @@ export default function WorldExplorer() {
         <div className="flex flex-wrap items-center gap-1">{MAP_YEARS.map((m, k) => <button key={m.key} onClick={() => { setI(k); setSel(null); }} className={cx('rounded px-2 py-1 text-[11px] font-semibold', k === i ? 'bg-gold-400 text-ink-950' : 'bg-ink-950/60 text-parchment-200 hover:bg-ink-800')}>{formatYear(m.year)}</button>)}</div>
         <input type="range" min={0} max={MAP_YEARS.length - 1} value={i} onChange={(e) => { setI(Number(e.target.value)); setSel(null); }} className="mt-3 w-full accent-gold-400" />
       </Panel>
-      <div className="grid gap-4 lg:grid-cols-[1fr_340px]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
         <Panel className="!p-0 overflow-hidden">
           <div className="relative h-[560px]">
             {error && <p className="p-4 text-blood-400">{error}</p>}

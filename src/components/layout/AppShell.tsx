@@ -24,7 +24,7 @@ export function Logo({ small }: { small?: boolean }) {
   return (
     <NavLink to="/" className="flex items-center gap-2.5">
       <span className={cx('flex items-center justify-center rounded-full bg-gradient-to-b from-gold-100 to-gold-600 text-ink-950 shadow-glow ring-1 ring-gold-700', small ? 'h-8 w-8' : 'h-8 w-8 sm:h-10 sm:w-10')}><Globe2 className={small ? 'h-4 w-4' : 'h-5 w-5'} /></span>
-      <span className={cx('title-display gold-text font-extrabold', small ? 'text-lg' : 'whitespace-nowrap text-lg sm:text-xl')}>What If?</span>
+      <span className={cx('title-display gold-text font-extrabold', small ? 'text-lg' : 'whitespace-nowrap text-lg max-[359px]:hidden sm:text-xl')}>What If?</span>
     </NavLink>
   );
 }

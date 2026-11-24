@@ -38,10 +38,10 @@ function Inner({ me, w }: { me: string; w: World }) {
             const war = findWar(w, me, c.id);
             const rel = peekRelation(w, me, c.id);
             return (
-              <div key={c.id} className="flex items-center gap-2.5 border-t border-gold-700/10 py-1.5 text-xs">
+              <div key={c.id} className="flex flex-wrap items-center gap-x-2.5 gap-y-1 border-t border-gold-700/10 py-1.5 text-xs">
                 <Flag flag={c.flag} className="h-5 w-8 shrink-0 rounded-sm" />
-                <button className="min-w-0 flex-1 truncate text-left text-parchment-50 hover:text-gold-100" onClick={() => select(null, c.id)}>{n(c.name)}</button>
-                <span className="stat-num text-parchment-300/70">{num(s.soldiers)} {t('soldiers')}</span>
+                <button className="min-w-[6.5rem] flex-1 truncate text-left text-parchment-50 hover:text-gold-100" onClick={() => select(null, c.id)}>{n(c.name)}</button>
+                <span className="stat-num whitespace-nowrap text-parchment-300/70">{num(s.soldiers)} {t('soldiers')}</span>
                 {war ? <Badge tone="red">{t('At war')}</Badge> : rel?.treaties.alliance ? <Badge tone="green">{t('Allied')}</Badge> : truceActive(w, me, c.id) ? <Badge tone="blue">{t('Truce')}</Badge> : <Badge tone="gray">{Math.round(rel?.opinion ?? 0)}</Badge>}
                 <Button size="sm" onClick={() => setTarget(c.id)}>{t('Diplomacy')}</Button>
               </div>
