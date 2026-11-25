@@ -1,11 +1,10 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Award, BookOpen, Castle, Compass, Crown, Globe2, Home, Menu, ScrollText, Settings, Swords, User, Users, X } from 'lucide-react';
+import { Award, BookOpen, Castle, Compass, Crown, Globe2, Home, Menu, ScrollText, Settings, Swords, Users, X } from 'lucide-react';
 import { useState } from 'react';
 import { WorldMap } from '../map/WorldMap';
 import { useDataset } from '../../hooks/useDataset';
 import { cx } from '../ui';
-import { useProfile } from '../../services/profile';
 import { sfx } from '../../services/audio';
 import { tr } from '../../i18n';
 import { LangSwitch } from '../ui/LangSwitch';
@@ -50,7 +49,6 @@ export function MapBackdrop({ dim = 0.55 }: { dim?: number }) {
 export function AppShell() {
   const loc = useLocation();
   const [open, setOpen] = useState(false);
-  const name = useProfile((s) => s.displayName);
   return (
     <div className="min-h-full">
       <MapBackdrop dim={0.74} />
@@ -64,7 +62,6 @@ export function AppShell() {
           </nav>
           <div className="ml-auto flex items-center gap-2">
             <LangSwitch compact />
-            <NavLink to="/profile" className="btn-ghost !py-1.5"><User className="h-4 w-4" /><span className="hidden sm:inline">{name}</span></NavLink>
             <button className="btn-ghost !px-2 !py-1.5 xl:hidden" onClick={() => setOpen(!open)} aria-label={tr('Menu')}>{open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}</button>
           </div>
         </div>
