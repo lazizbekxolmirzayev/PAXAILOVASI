@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { AlertTriangle, ArrowLeft, Heart, Play } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Heart, Play, Users } from 'lucide-react';
 import { SCENARIO_BY_ID } from '../data/scenarios';
 import { getCustom } from '../services/scenarios';
 import type { Difficulty, ScenarioDefinition } from '../types/game';
@@ -112,6 +112,7 @@ function Details({ def }: { def: ScenarioDefinition }) {
             </div>
             <div className="mt-3"><span className="label">Difficulty</span><Select value={difficulty} onChange={setDifficulty} options={[{ value: 'story', label: 'Story' }, { value: 'normal', label: 'Normal' }, { value: 'hard', label: 'Hard' }, { value: 'ironman', label: 'Ironman' }]} /></div>
             <Button variant="gold" size="lg" className="mt-4 w-full" icon={<Play className="h-4 w-4" />} onClick={() => void start()}>Begin the timeline</Button>
+            <Link to={`/multiplayer?scenario=${def.id}`} className="mt-2 flex items-center justify-center gap-1 text-xs text-gold-300 hover:underline"><Users className="h-3.5 w-3.5" />Play this scenario in multiplayer</Link>
           </Panel>
         </div>
       </div>

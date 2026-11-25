@@ -44,7 +44,7 @@ export default function EraSelect() {
           </button>
         ))}
       </div>
-      <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
+      <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
         <Panel className="!p-0 overflow-hidden">
           <div className="flex flex-wrap items-center gap-4 border-b border-gold-600/20 p-4">
             <div className="flex-1">

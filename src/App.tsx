@@ -19,13 +19,25 @@ const ScenarioEditor = lazy(() => import('./pages/ScenarioEditor'));
 const ImperialSandbox = lazy(() => import('./pages/ImperialSandbox'));
 const WorldExplorer = lazy(() => import('./pages/WorldExplorer'));
 const SaveLoad = lazy(() => import('./pages/SaveLoad'));
+const MultiplayerLobby = lazy(() => import('./pages/MultiplayerLobby'));
+const MultiplayerRoom = lazy(() => import('./pages/MultiplayerRoom'));
 const PlayerProfile = lazy(() => import('./pages/PlayerProfile'));
 const Achievements = lazy(() => import('./pages/Achievements'));
 const StaticPage = lazy(() => import('./pages/Static'));
 const SettingsPage = lazy(() => import('./pages/Settings'));
 const CountryPage = lazy(() => import('./pages/game/Country'));
+const EconomyPage = lazy(() => import('./pages/game/Economy'));
+const PopulationPage = lazy(() => import('./pages/game/Population'));
+const FoodPage = lazy(() => import('./pages/game/Food'));
+const HealthPage = lazy(() => import('./pages/game/Health'));
+const TechnologyPage = lazy(() => import('./pages/game/Technology'));
+const InfrastructurePage = lazy(() => import('./pages/game/Infrastructure'));
 const DiplomacyPage = lazy(() => import('./pages/game/Diplomacy'));
 const MilitaryPage = lazy(() => import('./pages/game/Military'));
+const EventsPage = lazy(() => import('./pages/game/Events'));
+const TimelinePage = lazy(() => import('./pages/game/Timeline'));
+const ComparePage = lazy(() => import('./pages/game/Compare'));
+const HistorianPage = lazy(() => import('./pages/game/Historian'));
 
 export default function App() {
   const reduce = useSettings((s) => s.reduceMotion);
@@ -48,6 +60,8 @@ export default function App() {
             <Route path="explorer" element={<WorldExplorer />} />
             <Route path="saves" element={<SaveLoad />} />
             <Route path="worlds" element={<Navigate to="/saves" replace />} />
+            <Route path="multiplayer" element={<MultiplayerLobby />} />
+            <Route path="multiplayer/:roomId" element={<MultiplayerRoom />} />
             <Route path="profile" element={<PlayerProfile />} />
             <Route path="achievements" element={<Achievements />} />
             <Route path="settings" element={<SettingsPage />} />
@@ -57,8 +71,18 @@ export default function App() {
           <Route path="game" element={<GameLayout />}>
             <Route index element={null} />
             <Route path="country" element={<CountryPage />} />
+            <Route path="economy" element={<EconomyPage />} />
+            <Route path="population" element={<PopulationPage />} />
+            <Route path="food" element={<FoodPage />} />
+            <Route path="health" element={<HealthPage />} />
+            <Route path="technology" element={<TechnologyPage />} />
+            <Route path="infrastructure" element={<InfrastructurePage />} />
             <Route path="diplomacy" element={<DiplomacyPage />} />
             <Route path="military" element={<MilitaryPage />} />
+            <Route path="events" element={<EventsPage />} />
+            <Route path="timeline" element={<TimelinePage />} />
+            <Route path="compare" element={<ComparePage />} />
+            <Route path="historian" element={<HistorianPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
