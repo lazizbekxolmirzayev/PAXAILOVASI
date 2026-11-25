@@ -49,11 +49,10 @@ Every scenario page opens with a short animated cutscene in place of the “Hist
 
 ## Name list & statistics (`/royhat`)
 
-Everyone who enters the site writes a first and last name once; each browser session adds one record to the list. The **Statistika** button in the bottom bar of the first screen opens `/royhat` — an open page (no password, no delete buttons) with the number of people, the number of visits, the total time played, and per person the last visit, the number of visits and the time played.
+Everyone who enters the site writes a first and last name once; each browser session adds one record `{ name, at }` to the list. The **Statistika** button in the bottom bar of the first screen opens `/royhat` — an open page (no password, no delete buttons) with the number of people, the number of visits and, per person, the last visit and the number of visits. The same person writing the name several times is merged into one row.
 
-* **Play time is measured, not made up.** `src/services/playtime.ts` counts the seconds in which the tab is visible and the person used the mouse, keyboard or touch in the last 2 minutes; the number is saved to the visit record about once a minute (and when the tab is hidden or closed), as `playSec` (plus `minutes` for the other site that reads the same list). A hidden tab, or two minutes without input, adds nothing.
-* Visits recorded before play time was measured (and visits written by other sites) have no `playSec`; they show “—” and are never added to a total.
-* The list lives in the mockapi.io `visitors` resource set in `VITE_VISITORS_API` (the same list the PC Builder site reads); without it the list is kept in the browser. mockapi.io must accept the extra `playSec` number — if the times never appear, add a `playSec` (Number) field to the resource's schema.
+* The list lives in the mockapi.io `visitors` resource set in `VITE_VISITORS_API` (the same list the PC Builder site reads); without it the list is kept in the browser.
+* No play time is stored or shown.
 * Records can only be removed in the mockapi.io dashboard.
 
 ## Data & honesty
@@ -93,6 +92,6 @@ Capacity: the schema is indexed and turn-based multiplayer keeps server work per
 
 `npm test` covers: world creation from datasets, deterministic ticks, save→load→continue producing identical hashes, all 8 scenarios, command validation, AI historian answers, consequence projection, scenario validation and share codes.
 
-The visitor list and play-time clock are tested in `src/services/visitors.test.ts` and `src/services/playtime.test.ts` (fake clock and fake mock API: counting, idle/hidden tabs, reload inside a session, grouping by person, legacy records without a measured time).
+The visitor list (`src/services/visitors.test.ts`) is tested with a fake mock API: one record per visit, retry when the server is down, grouping by person.
 
 The cutscene has its own tests (`src/story/*.test.ts`): the timeline/voice engine with a fake clock and fake audio, script fidelity against the documented texts, the voice downloader, the intro memory, the procedural soundtrack with a fake Web Audio context (mood timeline, autoplay-blocked → unlock, pause, mute/duck, dispose/restart) and the `api/tts.js` function with ElevenLabs mocked.

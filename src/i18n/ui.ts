@@ -1026,13 +1026,8 @@ export const UI: [string, string, string][] = [
   ["Statistics", "Статистика", "Statistika"],
   ["People", "Люди", "Odamlar"],
   ["Visits", "Заходы", "Kirishlar"],
-  ["Time played", "Время в игре", "O'yin vaqti"],
   ["Last visit", "Последний заход", "Oxirgi kirish"],
   ["Refresh", "Обновить", "Yangilash"],
   ["No visitors yet", "Пока никого нет", "Hozircha ro'yxat bo'sh"],
   ["Could not load the data", "Не удалось загрузить данные", "Ma'lumot olinmadi"],
-  ["{h} h {m} min", "{h} ч {m} мин", "{h} soat {m} daqiqa"],
-  ["{m} min", "{m} мин", "{m} daqiqa"],
-  ["Under 1 min", "Меньше минуты", "1 daqiqadan kam"],
-  ["Play time is counted while the site is open and in use. Visits from before it was measured show —.", "Время считается, пока сайт открыт и им пользуются. У заходов, сделанных до начала измерения, вместо времени стоит —.", "O'yin vaqti sayt ochiq va ishlatilayotgan paytdan hisoblanadi. Vaqt o'lchanishidan oldingi kirishlar uchun — belgisi qo'yiladi."],
 ];
