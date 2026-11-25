@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { addVisitor, retryPending } from '../../services/visitors';
+import { addVisitor, resumeVisit, retryPending } from '../../services/visitors';
 
 const KEY = 'whatif.me.v2';
 const VISIT = 'whatif.visit';
@@ -16,6 +16,7 @@ export function NameGate() {
   const [err, setErr] = useState('');
   useEffect(() => {
     void retryPending();
+    resumeVisit(); // same browser session after a reload: keep measuring play time on the same record
     // Returning visitor: log one more visit per browser session (not for the list page itself).
     try {
       const me = localStorage.getItem(KEY);

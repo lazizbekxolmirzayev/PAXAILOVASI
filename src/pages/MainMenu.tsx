@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Award, Music, Settings, User, VolumeX } from 'lucide-react';
+import { Award, BarChart3, Music, Settings, VolumeX } from 'lucide-react';
 import { useGame } from '../store/game';
 import { latestSave, loadWorld, type SaveMeta } from '../services/saves';
 import { SCENARIOS } from '../data/scenarios';
@@ -10,7 +10,6 @@ import { sfx, startMusic, stopMusic } from '../services/audio';
 import { Globe } from '../components/map/Globe';
 import { Flag } from '../components/ui/Flag';
 import { OrnateDivider } from '../components/ui/Ornament';
-import { useProfile } from '../services/profile';
 import { formatYear, MAP_YEARS } from '../data/eras';
 import { cx } from '../components/ui';
 import { tr } from '../i18n';
@@ -52,7 +51,6 @@ export default function MainMenu() {
   const world = useGame((s) => s.world);
   const setWorld = useGame((s) => s.setWorld);
   const toast = useGame((s) => s.toast);
-  const name = useProfile((s) => s.displayName);
   const [last, setLast] = useState<SaveMeta | null>(null);
   const [splash, setSplash] = useState(() => !sessionStorage.getItem('whatif-splash'));
   const [eraIdx, setEraIdx] = useState(0);
@@ -144,7 +142,7 @@ export default function MainMenu() {
 
       {/* bottom bar */}
       <div className="absolute inset-x-0 bottom-0 z-20 flex items-center gap-3 border-t border-gold-600/20 bg-black/60 px-4 py-2.5 backdrop-blur sm:px-8">
-        <Link to="/profile" className="flex items-center gap-2 text-sm text-parchment-100 hover:text-gold-100"><span className="nav-icon !h-9 !w-9"><User className="h-4 w-4" /></span><span className="hidden sm:inline">{name}</span></Link>
+        <Link to="/royhat" title={tr('Statistics')} className="flex items-center gap-2 text-sm text-parchment-100 hover:text-gold-100"><span className="nav-icon !h-9 !w-9"><BarChart3 className="h-4 w-4" /></span><span className="hidden sm:inline">{tr('Statistics')}</span></Link>
         {last?.playerFlag && <span className="hidden items-center gap-2 text-xs text-parchment-300/70 md:flex"><Flag flag={last.playerFlag} className="h-4 w-6" />{tr('Last:')} {last.playerName} · {last.date}</span>}
         <div className="ml-auto flex items-center gap-2">
           <LangSwitch />
