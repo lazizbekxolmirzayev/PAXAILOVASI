@@ -30,7 +30,9 @@ export function eraForYear(year: number): EraId {
   for (const e of ERAS) if (year >= e.range[0] && year <= e.range[1]) return e.id;
   return year < -500 ? 'ancient' : 'modern';
 }
-export function formatYear(y: number): string { return y < 0 ? `${-y} BC` : y < 1000 ? `AD ${y}` : `${y}`; }
+let YL = { bc: 'BC', ad: 'AD' };
+export function setYearLabels(bc: string, ad: string): void { YL = { bc, ad }; }
+export function formatYear(y: number): string { return y < 0 ? `${-y} ${YL.bc}` : y < 1000 ? `${YL.ad} ${y}` : `${y}`; }
 
 export interface GovernmentDef { id: GovernmentId; name: string; description: string; effects: Partial<Record<ModifierKey, number>>; minEra: number }
 export const GOVERNMENTS: Record<GovernmentId, GovernmentDef> = {

@@ -5,11 +5,12 @@ import { SCENARIOS } from '../data/scenarios';
 import { deleteCustom, exportCode, importCode, listCommunity, listCustom, saveCustom, shareScenario } from '../services/scenarios';
 import type { ScenarioDefinition } from '../types/game';
 import { Badge, Button, EmptyState, ErrorBox, Loading, Modal, Panel, SectionTitle, Tabs, cx } from '../components/ui';
-import { ScenarioArt } from '../components/art/ScenarioArt';
+import { Banner } from '../components/art/SceneArt';
 import { formatYear } from '../data/eras';
 import { useProfile } from '../services/profile';
 import { useGame } from '../store/game';
 import { cloudEnabled } from '../services/supabase';
+import { tr } from '../i18n';
 
 type Tab = 'builtin' | 'mine' | 'community' | 'favorites';
 
@@ -44,53 +45,53 @@ export default function ScenarioLibrary() {
 
   return (
     <div>
-      <SectionTitle kicker="Scenario library">Every road not taken</SectionTitle>
+      <SectionTitle kicker={tr('Scenario library')}>{tr('Every road not taken')}</SectionTitle>
       <div className="mb-5 flex flex-wrap items-center gap-3">
-        <Tabs value={tab} onChange={setTab} tabs={[{ id: 'builtin', label: `Built-in (${SCENARIOS.length})` }, { id: 'mine', label: `My scenarios (${mine?.length ?? 0})` }, { id: 'community', label: 'Community' }, { id: 'favorites', label: `Favourites (${favorites.length})` }]} />
-        <div className="relative min-w-[200px] flex-1"><Search className="absolute left-2.5 top-2.5 h-4 w-4 text-parchment-300/50" /><input className="input !pl-8" placeholder="Search scenarios…" value={q} onChange={(e) => setQ(e.target.value)} /></div>
-        <Button icon={<Upload className="h-4 w-4" />} onClick={() => setImportOpen(true)}>Import code</Button>
-        <Button variant="gold" icon={<PenTool className="h-4 w-4" />} onClick={() => navigate('/editor')}>Create scenario</Button>
+        <Tabs value={tab} onChange={setTab} tabs={[{ id: 'builtin', label: `${tr('Built-in')} (${SCENARIOS.length})` }, { id: 'mine', label: `${tr('My scenarios')} (${mine?.length ?? 0})` }, { id: 'community', label: 'Community' }, { id: 'favorites', label: `${tr('Favourites')} (${favorites.length})` }]} />
+        <div className="relative min-w-[200px] flex-1"><Search className="absolute left-2.5 top-2.5 h-4 w-4 text-parchment-300/50" /><input className="input !pl-8" placeholder={tr('Search scenarios…')} value={q} onChange={(e) => setQ(e.target.value)} /></div>
+        <Button icon={<Upload className="h-4 w-4" />} onClick={() => setImportOpen(true)}>{tr('Import code')}</Button>
+        <Button variant="gold" icon={<PenTool className="h-4 w-4" />} onClick={() => navigate('/editor')}>{tr('Create scenario')}</Button>
       </div>
       {tab === 'community' && !cloudEnabled && <div className="mb-4"><ErrorBox error="Community sharing needs a Supabase project (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY). Share codes work without it." /></div>}
       {cErr && <div className="mb-4"><ErrorBox error={cErr} /></div>}
       {loading ? <Loading /> : !list.length ? (
-        <EmptyState icon={<PenTool className="h-8 w-8" />} title={tab === 'mine' ? 'No custom scenarios yet' : 'Nothing here'} text={tab === 'mine' ? 'Use the Scenario Editor to write your own alternative history.' : 'Try another tab or search.'} action={tab === 'mine' ? <Link className="btn-gold mt-3" to="/editor">Open the editor</Link> : undefined} />
+        <EmptyState icon={<PenTool className="h-8 w-8" />} title={tab === 'mine' ? 'No custom scenarios yet' : 'Nothing here'} text={tab === 'mine' ? 'Use the Scenario Editor to write your own alternative history.' : 'Try another tab or search.'} action={tab === 'mine' ? <Link className="btn-gold mt-3" to="/editor">{tr('Open the editor')}</Link> : undefined} />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {list.map((s, i) => (
             <Panel key={s.id} className="!p-0 overflow-hidden">
-              <Link to={`/scenarios/${s.id}`} className="group relative block h-32">
-                <ScenarioArt hue={s.artHue} year={formatYear(s.start.y)} seed={i + 5} className="absolute inset-0 h-full w-full transition group-hover:scale-105" />
+              <Link to={`/scenarios/${s.id}`} className="group relative block h-48 overflow-hidden rounded-t-lg">
+                <Banner scenarioId={s.id} hue={s.artHue} year={formatYear(s.start.y)} seed={i + 5} className="absolute inset-0 h-full w-full transition group-hover:scale-105" />
                 <div className="absolute inset-0 bg-gradient-to-t from-ink-900 to-transparent" />
-                <div className="absolute bottom-2 left-3 right-3"><div className="title-display text-[13px] text-gold-50">{s.title}</div><div className="text-[11px] text-parchment-200/70">{formatYear(s.start.y)} · {s.custom ? `by ${s.author ?? 'you'}` : 'built-in'}</div></div>
+                <div className="absolute bottom-2 left-3 right-3"><div className="title-display text-[13px] text-gold-50">{tr(s.title)}</div><div className="text-[11px] text-parchment-200/70">{formatYear(s.start.y)} · {s.custom ? `${tr('by')} ${s.author ?? tr('you')}` : tr('built-in')}</div></div>
               </Link>
               <div className="p-3">
-                <p className="line-clamp-2 font-serif italic text-parchment-100/90">{s.question}</p>
+                <p className="line-clamp-2 font-serif italic text-parchment-100/90">{tr(s.question)}</p>
                 <div className="mt-3 flex items-center gap-1.5">
-                  {s.custom ? <Badge tone="purple">custom</Badge> : <Badge tone="blue">curated</Badge>}
-                  <button className="ml-auto rounded p-1.5 hover:bg-ink-800" title="Favourite" onClick={() => toggleFav(s.id)}><Heart className={cx('h-4 w-4', favorites.includes(s.id) ? 'fill-blood-400 text-blood-400' : 'text-parchment-300')} /></button>
+                  {s.custom ? <Badge tone="purple">{tr('custom')}</Badge> : <Badge tone="blue">{tr('curated')}</Badge>}
+                  <button className="ml-auto rounded p-1.5 hover:bg-ink-800" title={tr('Favourite')} onClick={() => toggleFav(s.id)}><Heart className={cx('h-4 w-4', favorites.includes(s.id) ? 'fill-blood-400 text-blood-400' : 'text-parchment-300')} /></button>
                   {s.custom && tab === 'mine' && <>
-                    <button className="rounded p-1.5 hover:bg-ink-800" title="Edit" onClick={() => navigate(`/editor/${s.id}`)}><PenTool className="h-4 w-4 text-parchment-300" /></button>
-                    <button className="rounded p-1.5 hover:bg-ink-800" title="Share" onClick={() => setShareOf(s)}><Share2 className="h-4 w-4 text-parchment-300" /></button>
-                    <button className="rounded p-1.5 hover:bg-ink-800" title="Delete" onClick={() => void deleteCustom(s.id).then(reload)}><Trash2 className="h-4 w-4 text-blood-400" /></button>
+                    <button className="rounded p-1.5 hover:bg-ink-800" title={tr('Edit')} onClick={() => navigate(`/editor/${s.id}`)}><PenTool className="h-4 w-4 text-parchment-300" /></button>
+                    <button className="rounded p-1.5 hover:bg-ink-800" title={tr('Share')} onClick={() => setShareOf(s)}><Share2 className="h-4 w-4 text-parchment-300" /></button>
+                    <button className="rounded p-1.5 hover:bg-ink-800" title={tr('Delete')} onClick={() => void deleteCustom(s.id).then(reload)}><Trash2 className="h-4 w-4 text-blood-400" /></button>
                   </>}
-                  {s.custom && tab === 'community' && <button className="rounded p-1.5 hover:bg-ink-800" title="Save to my scenarios" onClick={() => void saveCustom(s).then(() => { reload(); toast('Saved to your scenarios.', 'good'); })}><Download className="h-4 w-4 text-parchment-300" /></button>}
+                  {s.custom && tab === 'community' && <button className="rounded p-1.5 hover:bg-ink-800" title={tr('Save to my scenarios')} onClick={() => void saveCustom(s).then(() => { reload(); toast('Saved to your scenarios.', 'good'); })}><Download className="h-4 w-4 text-parchment-300" /></button>}
                 </div>
               </div>
             </Panel>
           ))}
         </div>
       )}
-      <Modal open={importOpen} onClose={() => setImportOpen(false)} title="Import a scenario" footer={<Button variant="gold" disabled={!code.trim()} onClick={() => void doImport()}>Import</Button>}>
-        <textarea className="input h-40 font-mono text-xs" placeholder="Paste a scenario share code…" value={code} onChange={(e) => setCode(e.target.value)} />
+      <Modal open={importOpen} onClose={() => setImportOpen(false)} title={tr('Import a scenario')} footer={<Button variant="gold" disabled={!code.trim()} onClick={() => void doImport()}>{tr('Import')}</Button>}>
+        <textarea className="input h-40 font-mono text-xs" placeholder={tr('Paste a scenario share code…')} value={code} onChange={(e) => setCode(e.target.value)} />
       </Modal>
       <Modal open={!!shareOf} onClose={() => setShareOf(null)} title={`Share “${shareOf?.title ?? ''}”`}>
         {shareOf && <div className="space-y-3">
           <p className="text-sm text-parchment-200">Share code (anyone can import it):</p>
           <textarea readOnly className="input h-28 font-mono text-[10px]" value={exportCode(shareOf)} />
           <div className="flex gap-2">
-            <Button icon={<Copy className="h-4 w-4" />} onClick={() => void navigator.clipboard.writeText(exportCode(shareOf)).then(() => toast('Copied.', 'good'))}>Copy code</Button>
-            <Button variant="gold" icon={<Share2 className="h-4 w-4" />} disabled={!cloudEnabled} onClick={() => void shareScenario(shareOf).then(() => toast('Published to the community.', 'good')).catch((e) => toast(e.message, 'bad'))}>Publish to community</Button>
+            <Button icon={<Copy className="h-4 w-4" />} onClick={() => void navigator.clipboard.writeText(exportCode(shareOf)).then(() => toast('Copied.', 'good'))}>{tr('Copy code')}</Button>
+            <Button variant="gold" icon={<Share2 className="h-4 w-4" />} disabled={!cloudEnabled} onClick={() => void shareScenario(shareOf).then(() => toast('Published to the community.', 'good')).catch((e) => toast(e.message, 'bad'))}>{tr('Publish to community')}</Button>
           </div>
         </div>}
       </Modal>

@@ -44,13 +44,17 @@ export function stopMusic(): void {
   if (musicGain) { musicGain.disconnect(); musicGain = null; }
 }
 export function setMusicVolume(v: number): void { if (musicGain) musicGain.gain.value = v * 0.25; }
-export function sfx(kind: 'click' | 'event' | 'war' | 'success'): void {
+let lastHover = 0;
+export function sfx(kind: 'click' | 'event' | 'war' | 'success' | 'hover' | 'select' | 'page'): void {
   const vol = useSettings.getState().sfxVolume;
   if (vol <= 0) return;
   try {
     const c = ac();
     const g = c.createGain(); g.gain.value = vol * 0.2; g.connect(c.destination);
     const t = c.currentTime;
+    if (kind === 'hover') { if (performance.now() - lastHover < 60) return; lastHover = performance.now(); note(1320, t, 0.05, 0.08, 'sine', g); }
+    if (kind === 'select') { note(392, t, 0.35, 0.25, 'triangle', g); note(587, t + 0.06, 0.45, 0.2, 'sine', g); note(784, t + 0.12, 0.6, 0.15, 'sine', g); }
+    if (kind === 'page') { note(220, t, 0.25, 0.12, 'sine', g); note(330, t + 0.04, 0.3, 0.1, 'sine', g); }
     if (kind === 'click') note(880, t, 0.08, 0.3, 'triangle', g);
     if (kind === 'event') { note(523, t, 0.6, 0.3, 'sine', g); note(784, t + 0.12, 0.8, 0.25, 'sine', g); }
     if (kind === 'war') { note(110, t, 1.2, 0.5, 'sawtooth', g); note(98, t + 0.25, 1.2, 0.4, 'sawtooth', g); }

@@ -20,7 +20,7 @@ function Emblem({ kind, color }: { kind: FlagDesign['emblem']; color: string }) 
 }
 
 /** Procedural heraldic flag (60×40 viewBox). */
-export const Flag = memo(function Flag({ flag, className = 'h-6 w-9', title }: { flag: FlagDesign; className?: string; title?: string }) {
+export const Flag = memo(function Flag({ flag, className = 'h-6 w-9', title, embed }: { flag: FlagDesign; className?: string; title?: string; embed?: { x: number; y: number; width: number; height: number } }) {
   const [a, b, c] = flag.colors;
   let body: JSX.Element;
   switch (flag.pattern) {
@@ -39,7 +39,7 @@ export const Flag = memo(function Flag({ flag, className = 'h-6 w-9', title }: {
   }
   const emblemPos = flag.pattern === 'stripes' || flag.pattern === 'canton' ? 'translate(13,10) scale(0.55) translate(-45,-20)' : 'translate(-15,0)';
   return (
-    <svg viewBox="0 0 60 40" className={className} style={{ ['--flag-bg' as string]: flag.pattern === 'stripes' ? c : a }} role="img" aria-label={title ?? 'Flag'}>
+    <svg viewBox="0 0 60 40" {...(embed ?? {})} preserveAspectRatio={embed ? 'xMidYMid slice' : undefined} className={embed ? undefined : className} style={{ ['--flag-bg' as string]: flag.pattern === 'stripes' ? c : a }} role="img" aria-label={title ?? 'Flag'}>
       {title && <title>{title}</title>}
       <defs>
         <linearGradient id="flagShade" x1="0" x2="1"><stop offset="0" stopColor="#fff" stopOpacity=".18" /><stop offset=".5" stopColor="#000" stopOpacity="0" /><stop offset="1" stopColor="#000" stopOpacity=".25" /></linearGradient>
@@ -48,6 +48,27 @@ export const Flag = memo(function Flag({ flag, className = 'h-6 w-9', title }: {
       {flag.emblem !== 'none' && <g transform={emblemPos}><Emblem kind={flag.emblem} color={flag.emblemColor} /></g>}
       <rect width="60" height="40" fill="url(#flagShade)" />
       <rect width="60" height="40" fill="none" stroke="rgba(0,0,0,.6)" strokeWidth="1.2" />
+    </svg>
+  );
+});
+
+/** Flag set into a gilded heraldic shield. */
+export const ShieldFlag = memo(function ShieldFlag({ flag, className = 'h-14 w-12', title }: { flag: FlagDesign; className?: string; title?: string }) {
+  const id = `sh${Math.abs(flag.colors.join('').split('').reduce((a, c) => a * 31 + c.charCodeAt(0), 7) % 99991)}`;
+  return (
+    <svg viewBox="0 0 60 70" className={className} role="img" aria-label={title ?? 'Coat of arms'}>
+      <defs>
+        <clipPath id={`${id}c`}><path d="M6 6 H54 V34 C54 52 40 62 30 66 C20 62 6 52 6 34 Z" /></clipPath>
+        <linearGradient id={`${id}g`} x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#fff3c9" /><stop offset=".4" stopColor="#c99c3b" /><stop offset=".7" stopColor="#5e4417" /><stop offset="1" stopColor="#e8d08a" /></linearGradient>
+        <radialGradient id={`${id}l`} cx=".3" cy=".2" r=".9"><stop offset="0" stopColor="#fff" stopOpacity=".35" /><stop offset=".5" stopColor="#fff" stopOpacity="0" /><stop offset="1" stopColor="#000" stopOpacity=".45" /></radialGradient>
+      </defs>
+      <g clipPath={`url(#${id}c)`}>
+        <Flag flag={flag} embed={{ x: 4, y: 4, width: 52, height: 64 }} />
+        <rect width="60" height="70" fill={`url(#${id}l)`} />
+      </g>
+      <path d="M6 6 H54 V34 C54 52 40 62 30 66 C20 62 6 52 6 34 Z" fill="none" stroke="#1b1208" strokeWidth="5" />
+      <path d="M6 6 H54 V34 C54 52 40 62 30 66 C20 62 6 52 6 34 Z" fill="none" stroke={`url(#${id}g)`} strokeWidth="3" />
+      <path d="M10 2 L30 0 L50 2" fill="none" stroke={`url(#${id}g)`} strokeWidth="2" />
     </svg>
   );
 });

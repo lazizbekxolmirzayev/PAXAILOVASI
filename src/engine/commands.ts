@@ -4,7 +4,7 @@ import type { BuildingKind, Command, CommandResult, Country, MapStatic, World } 
 import { TECH_BY_ID, techAvailable, techLevel } from '../data/technologies';
 import { GOVERNMENTS, eraForYear, eraIndex } from '../data/eras';
 import { addModifier, addTimeline, clamp, fmtNum, getRelation, isAtWar, log, now } from './util';
-import { canReach, declareWar, demandableProvinces, describeTerms, endWar, evaluatePeace, PeaceTerms } from './military';
+import { canReach, committed, frontProvince, updateScore, declareWar, demandableProvinces, describeTerms, endWar, evaluatePeace, PeaceTerms } from './military';
 import { evaluateProposal, recordTreaty, setTreaty } from './diplomacy';
 import { buildCost } from './ai';
 import { resolvePlayerEvent } from './events';
@@ -129,6 +129,46 @@ export function applyCommand(w: World, cmd: Command, st: MapStatic): CommandResu
       if (name.length < 2) return fail('Name too short.');
       c.name = name;
       return ok('Renamed.');
+    }
+    case 'personalBattle': {
+      const war = w.wars.find((x) => x.id === cmd.warId && !x.ended && (x.attackers.includes(c.id) || x.defenders.includes(c.id)));
+      if (!war) return fail('That war is not active.');
+      const m = now(w);
+      if (war.personalAt === m) return fail('You have already led a battle in this war this month.');
+      if (![cmd.allyLoss, cmd.enemyLoss, cmd.kills].every((v) => Number.isFinite(v))) return fail('Invalid battle report.');
+      const allyLoss = clamp(cmd.allyLoss, 0, 1), enemyLoss = clamp(cmd.enemyLoss, 0, 1), kills = clamp(Math.round(cmd.kills), 0, 500);
+      war.personalAt = m;
+      const mine = war.attackers.includes(c.id) ? war.attackers : war.defenders;
+      const theirs = war.attackers.includes(c.id) ? war.defenders : war.attackers;
+      const enemy = w.countries[theirs[0]];
+      const target = frontProvince(w, mine, theirs, st) ?? w.provinces[enemy.capital];
+      const hurt = (x: Country, frac: number, won: boolean) => {
+        const loss = committed(w, x, war) * frac * 0.3;
+        x.military.regiments = Math.max(0, x.military.regiments - loss);
+        x.military.losses += loss; x.pop.warDeaths += loss * 600;
+        x.military.morale = clamp(x.military.morale + (won ? 0.06 : -0.1), 0.05, 1);
+        x.stability.warExhaustion = clamp(x.stability.warExhaustion + frac * 12, 0, 100);
+        return loss;
+      };
+      const lossMine = hurt(c, allyLoss, cmd.won), lossTheirs = hurt(enemy, enemyLoss, !cmd.won);
+      const winner = cmd.won ? c.id : enemy.id;
+      const factors = [`Led in person by ${c.ruler.title} ${c.ruler.name}`, `${kills} enemies fell by the commander's hand`];
+      if (cmd.heroFell) factors.push(`${c.ruler.name} was struck down on the field`);
+      war.battles.push({ date: { ...w.date }, province: target?.id ?? c.capital, attacker: c.id, defender: enemy.id, winner, aLoss: Math.round(lossMine * 1000), dLoss: Math.round(lossTheirs * 1000), factors });
+      if (war.battles.length > 60) war.battles.shift();
+      w.stats.battles++;
+      if (cmd.won) {
+        c.stability.legitimacy = clamp(c.stability.legitimacy + (kills >= 15 ? 4 : 2), 0, 100);
+        if (target && target.controller && theirs.includes(target.controller)) {
+          target.siege = clamp(target.siege + 0.6, 0, 1);
+          if (target.siege >= 1) { target.controller = c.id; target.siege = 0; addTimeline(w, 'war', `Fall of ${target.name}`, `${c.name} takes ${target.name} after a battle led by ${c.ruler.name}. (${war.name})`, [c.id, enemy.id], 1); invalidate(w); }
+        }
+      } else c.stability.legitimacy = clamp(c.stability.legitimacy - 2, 0, 100);
+      if (cmd.heroFell) { c.ruler.health = clamp(c.ruler.health - 30, 1, 100); }
+      updateScore(w, war);
+      const where = target ? target.name : enemy.name;
+      log(w, `Battle of ${where}: ${c.ruler.name} leads the army in person — ${cmd.won ? 'victory' : 'defeat'}.`, 'battle', winner);
+      return ok(cmd.won ? `Victory at ${where}! ${kills} enemies fell by your hand.` : `Defeat at ${where}.`);
     }
     case 'colonize': {
       const p = w.provinces[cmd.province];

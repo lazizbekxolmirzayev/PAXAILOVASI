@@ -29,7 +29,7 @@ export const PROFILES: Record<string, PolityProfile> = {
   'Eastern Roman Empire': { government: 'empire', color: '#7d3c86', flag: F('border', ['#5b1f6a', '#d4a53c', '#5b1f6a'], 'eagle', '#e9c86a'), capital: 'constantinople' },
   'Byzantine Empire': { government: 'empire', color: '#7d3c86', flag: F('quartered', ['#9e1c22', '#e9c86a', '#9e1c22'], 'cross', '#e9c86a'), capital: 'constantinople' },
   'Ottoman Empire': { government: 'empire', color: '#3f7a5a', flag: F('solid', ['#b41f24', '#b41f24', '#b41f24'], 'crescent', '#f5f1e6'), capital: 'bursa', personality: { aggression: 0.7, diplomacy: 0.4, economy: 0.5, expansion: 0.8 } },
-  'Timurid Empire': { government: 'khaganate', color: '#3d6f8f', flag: F('solid', ['#1d2a3a', '#1d2a3a', '#1d2a3a'], 'rings', '#e6d3a0'), capital: 'samarkand', personality: { aggression: 0.9, diplomacy: 0.3, economy: 0.4, expansion: 0.9 } },
+  'Timurid Empire': { government: 'khaganate', color: '#9a6a3a', flag: F('solid', ['#1d2a3a', '#1d2a3a', '#1d2a3a'], 'rings', '#e6d3a0'), capital: 'samarkand', personality: { aggression: 0.9, diplomacy: 0.3, economy: 0.4, expansion: 0.9 } },
   'Ming Empire': { government: 'empire', color: '#c9a640', flag: F('solid', ['#c8a02a', '#c8a02a', '#c8a02a'], 'sun', '#9b1b1b'), capital: 'nanjing', personality: { aggression: 0.35, diplomacy: 0.5, economy: 0.8, expansion: 0.3 } },
   'Ming Chinese Empire': { government: 'empire', color: '#c9a640', flag: F('solid', ['#c8a02a', '#c8a02a', '#c8a02a'], 'sun', '#9b1b1b'), capital: 'beijing' },
   'Yuan Dynasty': { government: 'khaganate', color: '#b58f3e', flag: F('solid', ['#2e4f88', '#2e4f88', '#2e4f88'], 'sun', '#f1e3b6'), capital: 'beijing' },

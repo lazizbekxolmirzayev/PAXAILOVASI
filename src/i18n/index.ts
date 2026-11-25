@@ -1,55 +1,54 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { DICT } from './dict';
-import { translateName } from './names';
+import { MONTHS, setDateLocale } from '../engine/date';
+import { setYearLabels } from '../data/eras';
 
-export type Lang = 'uz' | 'en' | 'ru';
-export const LANGS: { id: Lang; label: string; short: string }[] = [
-  { id: 'uz', label: "O'zbekcha", short: 'UZ' },
-  { id: 'en', label: 'English', short: 'EN' },
-  { id: 'ru', label: 'Русский', short: 'RU' },
+export type Lang = 'en' | 'ru' | 'uz';
+export const LANGS: { id: Lang; label: string; native: string }[] = [
+  { id: 'uz', label: 'UZ', native: "O'zbekcha" },
+  { id: 'ru', label: 'RU', native: 'Русский' },
+  { id: 'en', label: 'EN', native: 'English' },
 ];
 
-function detect(): Lang {
-  const n = (typeof navigator !== 'undefined' ? navigator.language : 'en').toLowerCase();
-  if (n.startsWith('uz')) return 'uz';
-  if (n.startsWith('ru')) return 'ru';
-  return 'en';
+export const useLang = create<{ lang: Lang; setLang: (l: Lang) => void }>()(persist((set) => ({
+  lang: (typeof navigator !== 'undefined' && navigator.language?.startsWith('ru') ? 'ru' : typeof navigator !== 'undefined' && navigator.language?.startsWith('uz') ? 'uz' : 'en') as Lang,
+  setLang: (lang) => set({ lang }),
+}), { name: 'whatif-lang' }));
+
+let index: Map<string, [string, string]> | null = null;
+function lookup(): Map<string, [string, string]> {
+  if (!index) { index = new Map(); for (const [en, ru, uz] of DICT) index.set(en, [ru, uz]); }
+  return index;
 }
 
-interface LangState { lang: Lang; setLang: (l: Lang) => void }
-export const useLang = create<LangState>()(persist((set) => ({
-  lang: detect(),
-  setLang: (lang) => { if (typeof document !== 'undefined') document.documentElement.lang = lang; set({ lang }); },
-}), {
-  name: 'whatif-lang',
-  onRehydrateStorage: () => (s) => { if (s && typeof document !== 'undefined') document.documentElement.lang = s.lang; },
-}));
-
-export type Vars = Record<string, string | number>;
-function fill(text: string, vars?: Vars): string {
-  return vars ? text.replace(/\{(\w+)\}/g, (m, k: string) => (k in vars ? String(vars[k]) : m)) : text;
+/** Translate an English source string (the English text is the key). `{name}` placeholders are interpolated. */
+export function t(s: string, vars?: Record<string, string | number>): string {
+  if (!s) return s;
+  const lang = useLang.getState().lang;
+  let out = s;
+  if (lang !== 'en') {
+    let hit = lookup().get(s);
+    let pre = '', post = '';
+    if (!hit) {
+      const core = s.trim();
+      hit = lookup().get(core);
+      if (hit) { pre = s.slice(0, s.indexOf(core)); post = s.slice(s.indexOf(core) + core.length); }
+    }
+    if (hit) out = pre + ((lang === 'ru' ? hit[0] : hit[1]) || s.trim()) + post;
+  }
+  if (vars) for (const [k, v] of Object.entries(vars)) out = out.split(`{${k}}`).join(String(v));
+  return out;
 }
+/** Translate only if a translation exists (for dynamic content such as names). */
+export const tx = (s: string | undefined | null): string => (s ? t(s) : '');
+export { t as tr };
 
-/** Translate an English source string; `{name}` placeholders are filled from `vars`. Unknown strings fall back to English. */
-export function translate(lang: Lang, text: string, vars?: Vars): string {
-  if (lang === 'en') return fill(text, vars);
-  return fill(DICT[text]?.[lang] ?? text, vars);
+/** Push localised month names / era labels into the shared formatters. */
+export function applyLocale(): void {
+  setDateLocale(MONTHS.map((m) => t(m)), t('BC'));
+  setYearLabels(t('BC'), t('AD'));
+  if (typeof document !== 'undefined') document.documentElement.lang = useLang.getState().lang;
 }
-
-/** Non-hook translation using the current language (for toasts, data tables). */
-export function tr(text: string, vars?: Vars): string { return translate(useLang.getState().lang, text, vars); }
-/** Non-hook place / nation name translation. */
-export function trName(name: string): string { return translateName(useLang.getState().lang, name); }
-
-/** Hook: returns a `t` function that re-renders the component when the language changes. */
-export function useT(): (text: string, vars?: Vars) => string {
-  const lang = useLang((s) => s.lang);
-  return (text: string, vars?: Vars) => translate(lang, text, vars);
-}
-/** Hook: translates place and nation names (countries, cities) for the current language. */
-export function useN(): (name: string) => string {
-  const lang = useLang((s) => s.lang);
-  return (name: string) => translateName(lang, name);
-}
-export { translateName };
+applyLocale();
+useLang.subscribe(applyLocale);

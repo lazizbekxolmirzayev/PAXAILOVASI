@@ -13,6 +13,7 @@ export default {
       },
       fontFamily: {
         display: ['"Cinzel"', 'Georgia', 'serif'],
+        deco: ['"Cinzel Decorative"', '"Cinzel"', 'Georgia', 'serif'],
         serif: ['"Cormorant Garamond"', 'Georgia', 'serif'],
         sans: ['"Inter"', 'system-ui', 'sans-serif'],
         mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
@@ -20,6 +21,7 @@ export default {
       boxShadow: {
         panel: '0 0 0 1px rgba(201,156,59,.28), 0 18px 40px -12px rgba(0,0,0,.8), inset 0 1px 0 rgba(255,235,180,.06)',
         glow: '0 0 24px rgba(217,182,92,.35)',
+        aaa: '0 0 0 1px rgba(0,0,0,.85), inset 0 1px 0 rgba(255,240,200,.14), inset 0 0 30px rgba(0,0,0,.55), 0 30px 60px -18px rgba(0,0,0,.95)',
       },
     },
   },

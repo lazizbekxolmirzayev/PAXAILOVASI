@@ -195,6 +195,7 @@ export interface War {
   battles: BattleLog[];
   ended: GameDate | null;
   result?: string;
+  personalAt?: number; // month index of the last battle the player led in person
 }
 
 export interface EventChoiceRecord { eventId: string; title: string; choice: string; country: CountryId; date: GameDate }
@@ -276,55 +277,6 @@ export interface World {
   stats: { ticks: number; battles: number; eventsResolved: number; crisesSurvived: number; maxProvinces: number; stableMonths: number; peakGdp: number };
   achievements: string[];
   uidCounter: number;
-  /** Real-time layer: garrisons, marches, battles, loans (see src/engine/rt). Created lazily. */
-  rt?: RealtimeState;
-}
-
-// ---- Real-time layer ----
-export type UnitKind = 'spear' | 'archer' | 'cavalry' | 'shield' | 'guard' | 'mercenary' | 'fleet';
-export type Units = Record<UnitKind, number>;
-export interface CityState { garrison: Units; gold: number; food: number; tier: 0 | 1 | 2 } // tier: 0 village, 1 town, 2 city
-export interface March {
-  id: string; owner: CountryId; from: number; to: number;
-  kind: 'attack' | 'support' | 'retreat';
-  units: Units; gold: number; food: number;
-  startT: number; arriveT: number; sea: boolean;
-}
-export interface RtBattle {
-  id: string; province: number; attacker: CountryId; defender: CountryId; from: number;
-  startT: number; endT: number;
-  a: Units; d: Units; a0: number; d0: number; aPower0: number; dPower0: number; // current/initial
-  aStart: Units; dStart: Units;
-  routedA: boolean; routedD: boolean; luckA: number; luckD: number;
-}
-export interface BattleReport {
-  id: string; t: number; province: number; attacker: CountryId; defender: CountryId; winner: CountryId;
-  aStart: number; dStart: number; aKilled: number; dKilled: number; aFled: number; dFled: number; prisoners: number;
-  lootGold: number; lootFood: number; captured: boolean; seen: boolean;
-}
-export interface Loan { id: string; lender: CountryId; borrower: CountryId; principal: number; owed: number; dueT: number; status: 'active' | 'repaid' | 'defaulted' }
-export interface RtOffer {
-  id: string; t: number; from: CountryId; to: CountryId; kind: 'peace' | 'alliance';
-  terms: { gold: number; food: number; soldiers: number; reverse?: boolean }; // reverse: `from` pays instead of `to`
-}
-export type NoticeKind = 'incoming' | 'battleWon' | 'battleLost' | 'captured' | 'lost' | 'war' | 'peace' | 'loanDue' | 'loanDefault' | 'offer' | 'allied' | 'support';
-export interface RtNotice { id: string; t: number; to: CountryId; kind: NoticeKind; params: Record<string, string | number>; province?: number }
-export interface RealtimeState {
-  t: number; // game-clock seconds (advances only while the game runs)
-  cities: CityState[];
-  marches: March[];
-  battles: RtBattle[];
-  reports: BattleReport[];
-  loans: Loan[];
-  offers: RtOffer[];
-  notices: RtNotice[];
-  truces: Record<string, number>; // relKey -> game-clock second the truce ends
-  nextAi: Record<CountryId, number>;
-  counter: number;
-  incomeAcc: number;
-  handled: Record<string, true>; // AI already reacted to this march
-  warT: Record<string, number>; // war id -> game-clock second it started
-  aiOfferT: Record<string, number>; // war id -> last time an AI offered peace
 }
 
 // ---- Commands (player actions). Validated & applied by engine/commands.ts. ----
@@ -345,7 +297,8 @@ export type Command =
   | { type: 'moveCapital'; country: CountryId; province: number }
   | { type: 'reform'; country: CountryId; government: GovernmentId }
   | { type: 'rename'; country: CountryId; name: string }
-  | { type: 'colonize'; country: CountryId; province: number };
+  | { type: 'colonize'; country: CountryId; province: number }
+  | { type: 'personalBattle'; country: CountryId; warId: string; won: boolean; allyLoss: number; enemyLoss: number; kills: number; heroFell: boolean };
 
 export type BuildingKind = 'roads' | 'port' | 'farms' | 'market' | 'buildings' | 'fort';
 export type DiploAction =

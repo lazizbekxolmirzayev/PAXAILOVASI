@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { tr } from '../../i18n';
 
 export interface Series { name: string; color: string; points: { x: number; y: number }[]; dashed?: boolean }
 
@@ -24,7 +25,7 @@ export function LineChart({ series, height = 180, xLabel = (x: number) => String
   const sx = (x: number) => P.l + ((x - xmin) / (xmax - xmin)) * (W - P.l - P.r);
   const sy = (y: number) => H - P.b - ((y - ymin) / (ymax - ymin)) * (H - P.t - P.b);
   const ticks = 4;
-  if (!series.some((s) => s.points.length)) return <div className="flex h-24 items-center justify-center text-xs text-parchment-300/50">No data yet — advance time to record history.</div>;
+  if (!series.some((s) => s.points.length)) return <div className="flex h-24 items-center justify-center text-xs text-parchment-300/50">{tr('No data yet — advance time to record history.')}</div>;
   return (
     <div className="relative">
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full" onMouseLeave={() => setHover(null)} onMouseMove={(e) => {
@@ -47,10 +48,10 @@ export function LineChart({ series, height = 180, xLabel = (x: number) => String
       {hover !== null && (
         <div className="pointer-events-none absolute right-2 top-1 rounded bg-ink-950/90 px-2 py-1 text-[11px] ring-1 ring-gold-600/40">
           <div className="text-gold-200">{xLabel(Math.round(hover))}</div>
-          {series.map((s) => { const p = s.points.reduce((a, b) => (Math.abs(b.x - hover) < Math.abs(a.x - hover) ? b : a), s.points[0]); return p && <div key={s.name} style={{ color: s.color }}>{s.name}: {yFormat(p.y)}</div>; })}
+          {series.map((s) => { const p = s.points.reduce((a, b) => (Math.abs(b.x - hover) < Math.abs(a.x - hover) ? b : a), s.points[0]); return p && <div key={s.name} style={{ color: s.color }}>{tr(s.name)}: {yFormat(p.y)}</div>; })}
         </div>
       )}
-      <div className="mt-1 flex flex-wrap gap-3">{series.map((s) => <span key={s.name} className="flex items-center gap-1 text-[11px] text-parchment-300/80"><span className="h-0.5 w-4" style={{ background: s.color }} />{s.name}</span>)}</div>
+      <div className="mt-1 flex flex-wrap gap-3">{series.map((s) => <span key={s.name} className="flex items-center gap-1 text-[11px] text-parchment-300/80"><span className="h-0.5 w-4" style={{ background: s.color }} />{tr(s.name)}</span>)}</div>
     </div>
   );
 }
@@ -61,7 +62,7 @@ export function BarList({ items, format = fmtAxis }: { items: { label: string; v
     <div className="space-y-1.5">
       {items.map((i) => (
         <div key={i.label} className="grid grid-cols-[minmax(0,9rem)_1fr_4.5rem] items-center gap-2 text-xs">
-          <span className="truncate text-parchment-200/80" title={i.label}>{i.label}</span>
+          <span className="truncate text-parchment-200/80" title={tr(i.label)}>{tr(i.label)}</span>
           <div className="h-2 rounded-full bg-ink-950"><div className="h-full rounded-full" style={{ width: `${(Math.abs(i.value) / max) * 100}%`, background: i.color ?? 'linear-gradient(90deg,#a97f2a,#e8d08a)' }} /></div>
           <span className="stat-num text-right text-parchment-100">{format(i.value)}</span>
         </div>
@@ -81,7 +82,7 @@ export function Donut({ parts, size = 120, center }: { parts: { label: string; v
         {parts.map((p) => { const len = (Math.max(0, p.value) / total) * C; const el = <circle key={p.label} cx="50" cy="50" r={r} fill="none" stroke={p.color} strokeWidth="14" strokeDasharray={`${len} ${C - len}`} strokeDashoffset={-acc} />; acc += len; return el; })}
         {center && <text x="50" y="54" textAnchor="middle" fontSize="12" fill="#f3e6bd" transform="rotate(90 50 50)">{center}</text>}
       </svg>
-      <div className="space-y-1">{parts.map((p) => <div key={p.label} className="flex items-center gap-2 text-xs text-parchment-200"><span className="h-2.5 w-2.5 rounded-sm" style={{ background: p.color }} />{p.label} <span className="stat-num text-parchment-300/60">{Math.round((Math.max(0, p.value) / total) * 100)}%</span></div>)}</div>
+      <div className="space-y-1">{parts.map((p) => <div key={p.label} className="flex items-center gap-2 text-xs text-parchment-200"><span className="h-2.5 w-2.5 rounded-sm" style={{ background: p.color }} />{tr(p.label)} <span className="stat-num text-parchment-300/60">{Math.round((Math.max(0, p.value) / total) * 100)}%</span></div>)}</div>
     </div>
   );
 }

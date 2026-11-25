@@ -1,62 +1,75 @@
-import { useMemo, useState } from 'react';
-import { RequirePlayer } from './common';
+import { useState } from 'react';
+import { Crown, Pencil, Users } from 'lucide-react';
+import { RequirePlayer, historySeries, yearLabel } from './common';
+import { Badge, Bar, Button, Panel, Select, Stat } from '../../components/ui';
+import { Flag } from '../../components/ui/Flag';
+import { LineChart } from '../../components/ui/Charts';
+import { GOVERNMENTS, eraForYear, eraIndex } from '../../data/eras';
+import { fmtNum, now, vassalsOf } from '../../engine/util';
+import { techLevel } from '../../data/technologies';
 import { useGame } from '../../store/game';
-import { Panel } from '../../components/ui';
-import { useN, useT } from '../../i18n';
-import { countryStats, cityKind, cityRates, rtOf, soldiersOf, UNIT, UNIT_KINDS } from '../../engine/rt';
-import { KV, Res, UnitsGrid, num } from '../../components/game/parts';
-import { cityKindLabel } from '../../components/game/SendDialog';
-
-type SortKey = 'name' | 'soldiers' | 'gold' | 'food' | 'income';
+import type { GovernmentId } from '../../types/game';
+import { tr } from '../../i18n';
 
 export default function CountryPage() {
-  return <RequirePlayer>{(c, w) => <Inner id={c.id} w={w} />}</RequirePlayer>;
-}
-
-function Inner({ id, w }: { id: string; w: import('../../types/game').World }) {
-  const t = useT();
-  const n = useN();
+  const dispatch = useGame((s) => s.dispatch);
   const select = useGame((s) => s.select);
-  const [sort, setSort] = useState<SortKey>('soldiers');
-  const s = countryStats(w, id);
-  const rt = rtOf(w);
-  const rows = useMemo(() => {
-    const c = w.countries[id];
-    return w.provinces.filter((p) => p.owner === id).map((p) => {
-      const cs = rt.cities[p.id];
-      return { p, cs, soldiers: soldiersOf(cs.garrison), income: cityRates(p, c.military.quality).gold, kind: cityKind(w, p.id) };
-    });
-  }, [w, id, rt.reports.length]); // eslint-disable-line react-hooks/exhaustive-deps
-  const sorted = [...rows].sort((a, b) => sort === 'name' ? a.p.name.localeCompare(b.p.name) : sort === 'soldiers' ? b.soldiers - a.soldiers : sort === 'gold' ? b.cs.gold - a.cs.gold : sort === 'food' ? b.cs.food - a.cs.food : b.income - a.income);
-  const th = (k: SortKey, label: string, right = true) => <th className={`cursor-pointer px-2 py-1.5 ${right ? 'text-right' : 'text-left'} ${sort === k ? 'text-gold-200' : ''}`} onClick={() => setSort(k)}>{t(label)}</th>;
+  const [name, setName] = useState<string | null>(null);
+  const [gov, setGov] = useState<GovernmentId | ''>('');
   return (
-    <div className="space-y-4">
-      <div className="grid gap-4 md:grid-cols-2">
-        <Panel title="Overall strength">
-          <KV k="Cities" v={s.cities} /><KV k="Population" v={num(s.population)} /><KV k="Soldiers" v={num(s.soldiers)} /><KV k="Fleet" v={num(s.ships)} />
-          <KV k="Gold" v={<Res gold={s.gold} />} /><KV k="Food" v={<Res food={s.food} />} />
-          <KV k="Income per minute" v={<span>+{num(s.goldPerMin)} {t('gold')} · +{num(s.foodPerMin)} {t('food')}</span>} />
-        </Panel>
-        <Panel title="Army by unit type">
-          <UnitsGrid units={s.units} all />
-          <p className="mt-2 text-[11px] text-parchment-300/60">{UNIT_KINDS.filter((k) => k !== 'fleet').map((k) => `${t(UNIT[k].name)}: ${UNIT[k].gold}${t('g')}`).join(' · ')}</p>
-        </Panel>
-      </div>
-      <Panel title="Your cities" subtitle="Click a city to open it on the map.">
-        <div className="max-h-[48vh] overflow-auto">
-          <table className="w-full text-xs">
-            <thead className="sticky top-0 bg-ink-900 text-[10px] uppercase tracking-wider text-parchment-300/70"><tr>{th('name', 'City', false)}<th className="px-2 py-1.5 text-left">{t('Type')}</th>{th('soldiers', 'Soldiers')}{th('gold', 'Gold')}{th('food', 'Food')}{th('income', 'Gold / min')}</tr></thead>
-            <tbody>
-              {sorted.map(({ p, cs, soldiers, income, kind }) => (
-                <tr key={p.id} onClick={() => select(p.id, id)} className="cursor-pointer border-t border-gold-700/10 hover:bg-ink-800">
-                  <td className="px-2 py-1 text-parchment-50">{n(p.name)}</td><td className="px-2 py-1 text-parchment-300/70">{t(cityKindLabel(kind))}</td>
-                  <td className="stat-num px-2 py-1 text-right">{num(soldiers)}</td><td className="stat-num px-2 py-1 text-right">{num(cs.gold)}</td><td className="stat-num px-2 py-1 text-right">{num(cs.food)}</td><td className="stat-num px-2 py-1 text-right">+{num(income)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+    <RequirePlayer>{(c, w) => {
+      const vassals = vassalsOf(w, c.id);
+      const mods = c.modifiers.filter((m) => m.until > now(w));
+      return (
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-center gap-4">
+            <Flag flag={c.flag} className="h-16 w-24 rounded shadow-panel" />
+            <div className="flex-1">
+              {name === null ? <h1 className="title-display gold-text flex items-center gap-2 text-2xl">{c.name}<button onClick={() => setName(c.name)} className="text-parchment-300 hover:text-gold-100"><Pencil className="h-4 w-4" /></button></h1>
+                : <div className="flex gap-2"><input className="input" value={name} onChange={(e) => setName(e.target.value)} /><Button variant="gold" onClick={() => { void dispatch({ type: 'rename', country: c.id, name }); setName(null); }}>{tr('Rename')}</Button></div>}
+              <div className="mt-1 flex flex-wrap gap-1.5"><Badge>{GOVERNMENTS[c.government].name}</Badge>{c.historical ? <Badge tone="blue">{tr('Historical polity')}</Badge> : <Badge tone="purple">{tr('Created in this timeline')}</Badge>}{c.overlord && <Badge tone="red">{tr('Vassal of')} {w.countries[c.overlord]?.name}</Badge>}</div>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+            <Stat label={tr('Population')} value={fmtNum(c.pop.total)} sub={`${(c.pop.growthRate * 100).toFixed(2)}% / yr`} />
+            <Stat label={tr('GDP')} value={fmtNum(c.economy.gdp)} sub={tr('gold per year')} />
+            <Stat label={tr('Provinces')} value={c.provinceCount} sub={`${fmtNum(c.area)} km²`} />
+            <Stat label={tr('Technology')} value={techLevel(c.tech.known).toFixed(2)} sub={`${c.tech.known.length} discoveries`} />
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            <Panel title={tr('Ruler & succession')}>
+              <div className="flex items-start gap-3"><Crown className="mt-1 h-5 w-5 text-gold-300" /><div><div className="font-semibold text-gold-100">{c.ruler.title} {c.ruler.name}</div><div className="text-xs text-parchment-300/70">{tr('Age')} {w.date.y - c.ruler.born} · health {Math.round(c.ruler.health)} · {c.ruler.historical ? 'documented historical figure' : 'generated character'}</div><div className="mt-1 text-xs text-parchment-200">{tr('Administration')} {c.ruler.skill.admin} · Diplomacy {c.ruler.skill.diplomacy} · Military {c.ruler.skill.military}</div>{c.ruler.traits.length > 0 && <div className="mt-1 flex gap-1">{c.ruler.traits.map((t) => <Badge key={t} tone="gray">{t}</Badge>)}</div>}</div></div>
+              <div className="mt-3 flex items-start gap-3 text-sm"><Users className="mt-0.5 h-4 w-4 text-parchment-300" />{c.heir ? <span>{tr('Heir:')} <b className="text-parchment-50">{c.heir.name}</b> (age {w.date.y - c.heir.born}, admin {c.heir.skill.admin})</span> : <span className="text-blood-400">{tr('No designated heir — a succession crisis looms if the ruler dies.')}</span>}</div>
+            </Panel>
+            <Panel title={tr('Stability')}>
+              <div className="space-y-2.5">
+                <Bar label={tr('Stability')} value={c.stability.value} right={Math.round(c.stability.value)} color={c.stability.value < 35 ? 'red' : 'green'} />
+                <Bar label={tr('Public satisfaction')} value={c.stability.satisfaction} right={Math.round(c.stability.satisfaction)} />
+                <Bar label={tr('Government legitimacy')} value={c.stability.legitimacy} right={Math.round(c.stability.legitimacy)} color="blue" />
+                <Bar label={tr('Average unrest')} value={c.stability.unrest} right={`${Math.round(c.stability.unrest)}%`} color="red" />
+                <Bar label={tr('Rebellion pressure')} value={c.stability.rebellion} right={`${Math.round(c.stability.rebellion)}%`} color="red" />
+                <Bar label={tr('War exhaustion')} value={c.stability.warExhaustion} right={Math.round(c.stability.warExhaustion)} color="red" />
+              </div>
+              <p className="mt-2 text-[11px] text-parchment-300/60">{tr('Rebellion reaches 100% → a region revolts and declares a war of independence.')}</p>
+            </Panel>
+          </div>
+          <Panel title={tr('Government reform')} subtitle={tr('10-year cooldown; costs legitimacy and stability during the transition.')}>
+            <div className="flex flex-wrap gap-2">
+              <Select value={gov || c.government} onChange={(v) => setGov(v)} className="max-w-xs" options={Object.values(GOVERNMENTS).filter((g) => g.minEra <= eraIndex(eraForYear(w.date.y))).map((g) => ({ value: g.id, label: g.name }))} />
+              <Button variant="gold" disabled={!gov || gov === c.government} onClick={() => gov && void dispatch({ type: 'reform', country: c.id, government: gov })}>{tr('Enact reform')}</Button>
+            </div>
+            {gov && <p className="mt-2 text-xs text-parchment-300/70">{tr(GOVERNMENTS[gov].description)} {tr('Effects:')} {Object.entries(GOVERNMENTS[gov].effects).map(([k, v]) => `${k} ${v! > 0 ? '+' : ''}${v}`).join(', ')}</p>}
+          </Panel>
+          <div className="grid gap-4 md:grid-cols-2">
+            <Panel title={tr('Active modifiers')}>{mods.length ? <ul className="space-y-1.5 text-sm">{mods.map((m) => <li key={m.id} className="flex justify-between gap-2"><span className="text-parchment-50">{m.label}</span><span className="text-[11px] text-parchment-300/60">{Object.entries(m.effects).map(([k, v]) => `${k} ${v! > 0 ? '+' : ''}${v}`).join(', ')}{m.until < 1e8 ? ` · ${m.until - now(w)} mo` : ''}</span></li>)}</ul> : <p className="text-sm text-parchment-300/60">{tr('None.')}</p>}</Panel>
+            <Panel title={`Vassals (${vassals.length})`}>{vassals.length ? vassals.map((v) => <button key={v.id} onClick={() => select(v.capital, v.id)} className="flex w-full items-center gap-2 rounded px-2 py-1 text-left text-sm hover:bg-ink-800"><Flag flag={v.flag} className="h-4 w-6" />{v.name}<span className="ml-auto text-xs text-parchment-300/60">{fmtNum(v.pop.total)}</span></button>) : <p className="text-sm text-parchment-300/60">{tr('No vassals. Subjugate weaker states through war or diplomacy.')}</p>}</Panel>
+          </div>
+          <Panel title={tr('History of the realm')}>
+            <LineChart xLabel={yearLabel} series={[{ name: 'Population', color: '#e8d08a', points: historySeries(w, c.id, 'pop') }]} />
+            <LineChart xLabel={yearLabel} series={[{ name: 'Provinces', color: '#4fa08b', points: historySeries(w, c.id, 'provinces') }, { name: 'Stability', color: '#c2493d', points: historySeries(w, c.id, 'stability') }]} />
+          </Panel>
         </div>
-      </Panel>
-    </div>
+      );
+    }}</RequirePlayer>
   );
 }

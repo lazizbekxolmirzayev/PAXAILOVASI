@@ -1,7 +1,9 @@
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { useGame } from '../../store/game';
-import { Globe2 } from 'lucide-react';
+import { Globe } from '../map/Globe';
+import { OrnateDivider } from '../ui/Ornament';
+import { tr } from '../../i18n';
 
 // Documented historical facts shown while worlds are generated.
 const FACTS = [
@@ -20,12 +22,16 @@ export function LoadingScreen() {
   useEffect(() => { if (!loading) return; const t = setInterval(() => setI((x) => (x + 1) % FACTS.length), 3500); return () => clearInterval(t); }, [loading]);
   if (!loading) return null;
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-[80] flex flex-col items-center justify-center bg-ink-950/95 p-6 backdrop-blur">
-      <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 18, ease: 'linear' }} className="mb-8 rounded-full p-5 ring-1 ring-gold-500/40 shadow-glow"><Globe2 className="h-14 w-14 text-gold-300" /></motion.div>
-      <div className="title-display gold-text text-2xl">{loading}…</div>
-      <div className="skeleton mt-5 h-1.5 w-72 rounded-full" />
-      <p className="mt-8 max-w-lg text-center font-serif text-lg italic text-parchment-200/80">“{FACTS[i]}”</p>
-      <span className="mt-2 text-[10px] uppercase tracking-[0.3em] text-parchment-300/40">Documented history</span>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-[80] flex flex-col items-center justify-center overflow-hidden bg-black p-6">
+      <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 50% 40%, rgba(40,70,140,.35), transparent 60%), radial-gradient(ellipse at 50% 120%, rgba(169,127,42,.25), transparent 60%)' }} />
+      <div className="relative"><Globe mapKey="1400" size={300} speed={30} interactive={false} labels={false} /></div>
+      <div className="relative mt-6 font-deco gold-shine text-3xl font-bold">{loading}…</div>
+      <div className="relative mt-4 h-2 w-80 overflow-hidden rounded-full" style={{ background: 'linear-gradient(#05070c,#0b0f19) padding-box, linear-gradient(90deg,#5e4417,#f3e6bd,#5e4417) border-box', border: '1px solid transparent' }}>
+        <motion.div className="h-full w-1/3 rounded-full bg-gradient-to-r from-transparent via-gold-200 to-transparent" animate={{ x: ['-100%', '300%'] }} transition={{ repeat: Infinity, duration: 1.4, ease: 'easeInOut' }} />
+      </div>
+      <OrnateDivider className="relative mt-8 w-96" />
+      <motion.p key={i} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="relative mt-4 max-w-xl text-center font-serif text-xl italic text-parchment-100/85">“{FACTS[i]}”</motion.p>
+      <span className="relative mt-2 font-display text-[10px] uppercase tracking-[0.35em] text-sky-300/60">{tr('Documented history')}</span>
     </motion.div>
   );
 }

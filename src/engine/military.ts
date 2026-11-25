@@ -82,7 +82,7 @@ export function declareWar(w: World, attacker: CountryId, defender: CountryId, g
   return war;
 }
 
-function committed(w: World, c: Country, war: War): number {
+export function committed(w: World, c: Country, war: War): number {
   const leader = war.attackers[0] === c.id || war.defenders[0] === c.id;
   const doctrine = c.military.doctrine === 'offensive' ? 1.1 : c.military.doctrine === 'defensive' ? 0.9 : 1;
   const otherWars = w.wars.filter((x) => !x.ended && x !== war && (x.attackers.includes(c.id) || x.defenders.includes(c.id))).length;
@@ -100,7 +100,7 @@ function logistics(w: World, c: Country, target: Province): { factor: number; di
 }
 
 /** Pick a contested province: enemy-controlled, adjacent (or sea-linked) to territory controlled by `side`. */
-function frontProvince(w: World, side: CountryId[], enemy: CountryId[], st: MapStatic): Province | null {
+export function frontProvince(w: World, side: CountryId[], enemy: CountryId[], st: MapStatic): Province | null {
   const mine = new Set(side), theirs = new Set(enemy);
   const cands: Province[] = [];
   for (const p of w.provinces) {
@@ -211,7 +211,7 @@ function battle(w: World, war: War, st: MapStatic): void {
   }
 }
 
-function updateScore(w: World, war: War): void {
+export function updateScore(w: World, war: War): void {
   const atk = new Set(war.attackers), dfn = new Set(war.defenders);
   let defVal = 0, occByA = 0, atkVal = 0, occByD = 0;
   for (const p of w.provinces) {
