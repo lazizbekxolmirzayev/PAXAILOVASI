@@ -1,6 +1,6 @@
 import type { World } from '../types/game';
 import type { MapMode } from '../store/game';
-import { techLevel } from '../data/technologies';
+import { emptyUnits, soldiersOf } from '../engine/rt/units';
 import { peekRelation } from '../engine/util';
 
 const UNOWNED_P = '#cbb88f', UNOWNED_D = '#3b3a35';
@@ -19,12 +19,9 @@ export function ramp(t: number): string {
 export function computeFills(w: World, mode: MapMode, selected: string | null, parchment: boolean): string[] {
   const out = new Array<string>(w.provinces.length);
   const unowned = parchment ? UNOWNED_P : UNOWNED_D;
-  let maxDensity = 1, maxGdpPc = 1e-9;
-  if (mode === 'population') for (const p of w.provinces) maxDensity = Math.max(maxDensity, Math.log10(1 + p.pop / Math.max(50, p.area)));
-  const gdpPc: Record<string, number> = {};
-  if (mode === 'economy') for (const c of Object.values(w.countries)) if (c.alive && c.pop.total > 0) { gdpPc[c.id] = c.economy.gdp / c.pop.total; maxGdpPc = Math.max(maxGdpPc, gdpPc[c.id]); }
-  let maxArmy = 1;
-  if (mode === 'military') for (const c of Object.values(w.countries)) if (c.alive) maxArmy = Math.max(maxArmy, Math.log10(1 + c.military.regiments));
+  const rt = w.rt;
+  let maxSold = 1;
+  if (mode === 'military' && rt) for (const p of w.provinces) if (p.owner) maxSold = Math.max(maxSold, Math.log10(1 + soldiersOf(rt.cities[p.id]?.garrison ?? emptyUnits())));
   for (const p of w.provinces) {
     const c = p.owner ? w.countries[p.owner] : null;
     if (!c) { out[p.id] = mode === 'terrain' ? terrain(p) : unowned; continue; }
@@ -33,26 +30,18 @@ export function computeFills(w: World, mode: MapMode, selected: string | null, p
         let col = c.color;
         if (c.overlord && w.countries[c.overlord]) col = mix(col, w.countries[c.overlord].color, 0.45);
         if (c.tribal) col = desat(mix(col, unowned, 0.45), 0.5);
-        if (selected && c.id !== selected && selected === c.overlord) col = mix(col, '#ffffff', 0.12);
         out[p.id] = parchment ? mix(col, '#e3d2a8', 0.18) : col;
         break;
       }
       case 'terrain': out[p.id] = terrain(p); break;
-      case 'population': out[p.id] = ramp(Math.log10(1 + p.pop / Math.max(50, p.area)) / maxDensity); break;
-      case 'economy': out[p.id] = ramp(Math.sqrt((gdpPc[c.id] ?? 0) / maxGdpPc)); break;
-      case 'stability': out[p.id] = ramp(1 - p.unrest / 100); break;
-      case 'food': { const r = c.food.consumption > 0 ? c.food.production / c.food.consumption : 1; out[p.id] = ramp((r - 0.85) / 0.4); break; }
-      case 'technology': out[p.id] = ramp(techLevel(c.tech.known) / 6); break;
-      case 'military': out[p.id] = ramp(Math.log10(1 + c.military.regiments) / maxArmy); break;
+      case 'military': out[p.id] = ramp(Math.log10(1 + soldiersOf(rt?.cities[p.id]?.garrison ?? emptyUnits())) / maxSold); break;
       case 'diplomacy': {
         if (!selected) { out[p.id] = desat(c.color, 0.6); break; }
         if (c.id === selected) { out[p.id] = '#e8d08a'; break; }
         const r = peekRelation(w, selected, c.id);
         const atWar = w.wars.some((x) => !x.ended && ((x.attackers.includes(selected) && x.defenders.includes(c.id)) || (x.defenders.includes(selected) && x.attackers.includes(c.id))));
         if (atWar) out[p.id] = '#a3362c';
-        else if (c.overlord === selected) out[p.id] = '#c9a640';
         else if (r?.treaties.alliance) out[p.id] = '#2f8f6a';
-        else if (r?.treaties.nap || r?.treaties.trade) out[p.id] = '#5f9fae';
         else out[p.id] = r ? ramp((r.opinion + 100) / 200) : desat(c.color, 0.75);
         break;
       }
@@ -72,11 +61,6 @@ function terrain(p: { desert: boolean; mountain: boolean; river: boolean; lat: n
 export const MAP_MODES: { id: MapMode; label: string; legend: string }[] = [
   { id: 'political', label: 'Political', legend: 'Countries; vassals tinted toward their overlord; tribal lands muted.' },
   { id: 'terrain', label: 'Terrain', legend: 'Deserts, mountains, river valleys, tropics and polar lands.' },
-  { id: 'population', label: 'Population', legend: 'Population density (log scale).' },
-  { id: 'economy', label: 'Economy', legend: 'GDP per capita by country.' },
-  { id: 'stability', label: 'Unrest', legend: 'Green = calm, red = high unrest.' },
-  { id: 'food', label: 'Food', legend: 'Food production vs consumption.' },
-  { id: 'technology', label: 'Technology', legend: 'Technology level (0–6).' },
-  { id: 'military', label: 'Military', legend: 'Standing army size (log scale).' },
-  { id: 'diplomacy', label: 'Diplomacy', legend: 'Relative to the selected country: gold = self, green = ally, teal = treaty, red = war, gradient = opinion.' },
+  { id: 'military', label: 'Military', legend: 'Garrison size of each city (log scale).' },
+  { id: 'diplomacy', label: 'Diplomacy', legend: 'Gold = you, red = at war, green = allies, others by opinion.' },
 ];

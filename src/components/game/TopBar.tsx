@@ -1,43 +1,33 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Coins, FlaskConical, HeartPulse, Pause, Play, Shield, SkipForward, Users, Wheat, Scale, FastForward, Menu } from 'lucide-react';
+import { Anchor, Coins, Menu, Pause, Play, Shield, Wheat, Castle } from 'lucide-react';
 import { useGame, type Speed } from '../../store/game';
-import { useHotseat, endTurnOnline } from '../../services/multiplayer';
 import { Flag } from '../ui/Flag';
 import { cx } from '../ui';
-import { fmtDate } from '../../engine/date';
+import { countryStats, rtOf } from '../../engine/rt';
 import { fmtNum } from '../../engine/util';
-import { techLevel } from '../../data/technologies';
+import { useN, useT } from '../../i18n';
 
-const MONTH_MS: Record<Exclude<Speed, 0>, number> = { 1: 2000, 2: 1000, 5: 400, 10: 160 };
-
-/** Simulation clock: drives monthly ticks at the selected speed. */
+/** Real-time clock: ticks the world ~4 times per wall-clock second, scaled by the chosen speed. */
 export function useGameClock(): void {
-  const speed = useGame((s) => s.speed);
-  const acc = useRef(0);
   useEffect(() => {
-    if (!speed) return;
     let last = performance.now();
-    let raf = 0;
-    const loop = (t: number) => {
-      acc.current += t - last; last = t;
-      const st = useGame.getState();
-      if (!st.busy && st.remote?.mode !== 'online' && acc.current >= MONTH_MS[speed as Exclude<Speed, 0>]) {
-        acc.current = 0;
-        const w = st.world;
-        const blocked = w && w.player && w.events.pending.some((e) => e.country === w.player);
-        if (!blocked) st.tick(1);
-      }
-      raf = requestAnimationFrame(loop);
-    };
-    raf = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(raf);
-  }, [speed]);
+    const id = window.setInterval(() => {
+      const now = performance.now();
+      const dt = Math.min(2, (now - last) / 1000);
+      last = now;
+      if (document.hidden) return;
+      useGame.getState().step(dt);
+    }, 250);
+    return () => window.clearInterval(id);
+  }, []);
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
-      if ((e.target as HTMLElement)?.tagName === 'INPUT' || (e.target as HTMLElement)?.tagName === 'TEXTAREA') return;
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
       const st = useGame.getState();
       if (e.code === 'Space') { e.preventDefault(); st.setSpeed(st.speed ? 0 : 1); }
+      if (e.code === 'Escape') { if (st.mission) st.cancelMission(); }
       const map: Record<string, Speed> = { Digit1: 1, Digit2: 2, Digit3: 5, Digit4: 10 };
       if (map[e.code]) st.setSpeed(map[e.code]);
     };
@@ -58,70 +48,48 @@ function Res({ icon, value, delta, title, tone }: { icon: React.ReactNode; value
 
 export function TopBar({ onMenu }: { onMenu: () => void }) {
   useGame((s) => s.version);
+  const t = useT();
+  const n = useN();
   const w = useGame((s) => s.world)!;
   const speed = useGame((s) => s.speed);
   const setSpeed = useGame((s) => s.setSpeed);
-  const advance = useGame((s) => s.advance);
-  const busy = useGame((s) => s.busy);
-  const remote = useGame((s) => s.remote);
   const c = w.player ? w.countries[w.player] : null;
-  const online = remote?.mode === 'online';
+  const s = c && w.player ? countryStats(w, w.player) : null;
+  const sec = Math.floor(rtOf(w).t);
+  const clock = `${String(Math.floor(sec / 60)).padStart(2, '0')}:${String(sec % 60).padStart(2, '0')}`;
   return (
     <div className="pointer-events-auto flex flex-wrap items-center gap-2 border-b border-gold-600/30 bg-gradient-to-b from-ink-850/95 to-ink-950/90 px-3 py-2 shadow-panel backdrop-blur">
-      <button onClick={onMenu} className="nav-icon !h-9 !w-9" aria-label="Game menu"><Menu className="h-4 w-4" /></button>
+      <button onClick={onMenu} className="nav-icon !h-9 !w-9" aria-label={t('Game menu')}><Menu className="h-4 w-4" /></button>
       {c ? (
         <Link to="/game/country" className="flex items-center gap-2 rounded px-1.5 py-0.5 hover:bg-ink-800">
-          <Flag flag={c.flag} className="h-7 w-10 rounded-sm" title={c.name} />
+          <Flag flag={c.flag} className="h-7 w-10 rounded-sm" title={n(c.name)} />
           <div className="leading-tight">
-            <div className="title-display max-w-[180px] truncate text-[12px] text-gold-100">{c.name}</div>
-            <div className="text-[10px] text-parchment-300/60">{c.ruler.title} {c.ruler.name}</div>
+            <div className="title-display max-w-[180px] truncate text-[12px] text-gold-100">{n(c.name)}</div>
+            <div className="text-[10px] text-parchment-300/60">{t(c.ruler.title)} {n(c.ruler.name)}</div>
           </div>
         </Link>
-      ) : <div className="title-display text-xs text-parchment-300">Observer mode</div>}
-      {c && c.alive && (
+      ) : <div className="title-display text-xs text-parchment-300">{t('Observer mode')}</div>}
+      {s && c?.alive && (
         <div className="flex flex-wrap items-center gap-1.5">
-          <Res icon={<Coins className="h-3.5 w-3.5" />} value={fmtNum(c.economy.treasury)} delta={`${c.economy.lastBalance >= 0 ? '+' : ''}${fmtNum(c.economy.lastBalance)}`} tone={c.economy.lastBalance >= 0 ? 'good' : 'bad'} title="Treasury and monthly balance" />
-          <Res icon={<Users className="h-3.5 w-3.5" />} value={fmtNum(c.pop.total)} delta={`${(c.pop.growthRate * 100).toFixed(1)}%`} tone={c.pop.growthRate >= 0 ? 'good' : 'bad'} title="Population and annual growth" />
-          <Res icon={<Wheat className="h-3.5 w-3.5" />} value={`${(c.food.stock / Math.max(1, c.food.consumption)).toFixed(1)}m`} delta={c.food.shortage > 0 ? 'famine' : undefined} tone="bad" title="Food stock in months of consumption" />
-          <Res icon={<Scale className="h-3.5 w-3.5" />} value={`${Math.round(c.stability.value)}`} tone={c.stability.value < 35 ? 'bad' : 'good'} title="Stability (0–100)" />
-          <Res icon={<Shield className="h-3.5 w-3.5" />} value={`${c.military.regiments.toFixed(0)}k`} delta={`${Math.round(c.military.morale * 100)}%`} title="Army (thousands) and morale" />
-          <Res icon={<FlaskConical className="h-3.5 w-3.5" />} value={techLevel(c.tech.known).toFixed(2)} title="Technology level" />
-          {c.health.epidemic && <Res icon={<HeartPulse className="h-3.5 w-3.5" />} value="Epidemic" tone="bad" title={c.health.epidemic.name} />}
+          <Res icon={<Castle className="h-3.5 w-3.5" />} value={fmtNum(s.cities)} title={t('Cities')} />
+          <Res icon={<Coins className="h-3.5 w-3.5" />} value={fmtNum(Math.round(s.gold))} delta={`+${fmtNum(Math.round(s.goldPerMin))}/${t('min')}`} tone="good" title={t('Gold and income per minute')} />
+          <Res icon={<Wheat className="h-3.5 w-3.5" />} value={fmtNum(Math.round(s.food))} delta={`+${fmtNum(Math.round(s.foodPerMin))}/${t('min')}`} tone="good" title={t('Food and income per minute')} />
+          <Res icon={<Shield className="h-3.5 w-3.5" />} value={fmtNum(Math.round(s.soldiers))} title={t('Soldiers')} />
+          {s.ships > 0 && <Res icon={<Anchor className="h-3.5 w-3.5" />} value={fmtNum(Math.round(s.ships))} title={t('Fleet')} />}
         </div>
       )}
       <div className="ml-auto flex items-center gap-2">
         <div className="text-right leading-tight">
-          <div className="title-display text-[13px] text-gold-100">{fmtDate(w.date)}</div>
-          <div className="text-[10px] text-parchment-300/60">{online ? `Turn-based · ${remote?.roomId}` : speed ? `Running ${speed}×` : 'Paused'}</div>
+          <div className="title-display text-[13px] text-gold-100">{t('Year')} {w.date.y}</div>
+          <div className="stat-num text-[10px] text-parchment-300/60">{clock} · {speed ? `${speed}×` : t('Paused')}</div>
         </div>
-        {remote && <EndTurn />}
-        {!online && (
-          <div className="flex items-center gap-1 rounded-md bg-ink-950/70 p-1 ring-1 ring-gold-700/40">
-            <button className={cx('rounded p-1.5', speed === 0 ? 'bg-gold-400 text-ink-950' : 'text-gold-200 hover:bg-ink-800')} onClick={() => setSpeed(0)} title="Pause (Space)"><Pause className="h-3.5 w-3.5" /></button>
-            {([1, 2, 5, 10] as Speed[]).map((s) => (
-              <button key={s} className={cx('stat-num rounded px-1.5 py-1 text-[11px] font-bold', speed === s ? 'bg-gold-400 text-ink-950' : 'text-gold-200 hover:bg-ink-800')} onClick={() => setSpeed(s)} title={`${s}× speed`}>{s === 1 ? <Play className="h-3.5 w-3.5" /> : `${s}×`}</button>
-            ))}
-            <span className="mx-0.5 h-5 w-px bg-gold-700/40" />
-            <button disabled={busy} className="rounded px-1.5 py-1 text-[11px] font-semibold text-gold-200 hover:bg-ink-800 disabled:opacity-40" onClick={() => void advance(1)} title="Advance one month"><SkipForward className="inline h-3.5 w-3.5" />1m</button>
-            <button disabled={busy} className="rounded px-1.5 py-1 text-[11px] font-semibold text-gold-200 hover:bg-ink-800 disabled:opacity-40" onClick={() => void advance(12)} title="Advance one year"><FastForward className="inline h-3.5 w-3.5" />1y</button>
-            <button disabled={busy} className="rounded px-1.5 py-1 text-[11px] font-semibold text-gold-200 hover:bg-ink-800 disabled:opacity-40" onClick={() => void advance(120)} title="Advance a decade">10y</button>
-          </div>
-        )}
+        <div className="flex items-center gap-1 rounded-md bg-ink-950/70 p-1 ring-1 ring-gold-700/40">
+          <button className={cx('rounded p-1.5', speed === 0 ? 'bg-gold-400 text-ink-950' : 'text-gold-200 hover:bg-ink-800')} onClick={() => setSpeed(0)} title={t('Pause (Space)')}><Pause className="h-3.5 w-3.5" /></button>
+          {([1, 2, 5, 10] as Speed[]).map((x) => (
+            <button key={x} className={cx('stat-num rounded px-1.5 py-1 text-[11px] font-bold', speed === x ? 'bg-gold-400 text-ink-950' : 'text-gold-200 hover:bg-ink-800')} onClick={() => setSpeed(x)} title={`${x}× ${t('speed')}`}>{x === 1 ? <Play className="h-3.5 w-3.5" /> : `${x}×`}</button>
+          ))}
+        </div>
       </div>
     </div>
-  );
-}
-
-function EndTurn() {
-  const remote = useGame((s) => s.remote)!;
-  const busy = useGame((s) => s.busy);
-  const toast = useGame((s) => s.toast);
-  const hs = useHotseat();
-  const label = remote.mode === 'hotseat' ? `End turn · ${hs.players[hs.current]?.name ?? ''}` : 'End turn';
-  return (
-    <button disabled={busy} className="btn-gold !py-1.5 !text-xs" onClick={() => {
-      if (remote.mode === 'hotseat') void hs.endTurn();
-      else void endTurnOnline(remote.roomId).then((r) => toast(r.advanced ? 'Turn resolved by the server.' : 'Turn submitted — waiting for other players.', 'info')).catch((e) => toast(e.message, 'bad'));
-    }}>{label}</button>
   );
 }

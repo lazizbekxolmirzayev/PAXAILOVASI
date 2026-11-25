@@ -7,6 +7,7 @@ import { applyScenarioStart, installCustomScenario } from './scenario';
 import { initialSnapshots } from './tick';
 import { SCENARIO_BY_ID } from '../data/scenarios';
 import type { ScenarioDefinition } from '../types/game';
+import { ensureRt, syncCountries } from './rt/state';
 
 export * from './tick';
 export * from './commands';
@@ -20,7 +21,9 @@ export { evaluateProposal } from './diplomacy';
 export { evaluatePeace, demandableProvinces, canReach, provinceValue } from './military';
 export { computeCalc, techCost, provinceFood } from './systems';
 export { buildMapStatic } from './mapStatic';
-export { ACHIEVEMENTS } from './achievements';
+export { ACHIEVEMENTS, checkAchievements } from './achievements';
+export * as rt from './rt';
+export { rtTick, ensureRt } from './rt';
 
 /** Creates a ready-to-play world: dataset → countries → calibration → scenario → snapshots. */
 export function newGame(bundle: MapBundle, st: MapStatic, opts: CreateOptions, customScenario?: ScenarioDefinition | null): World {
@@ -30,6 +33,8 @@ export function newGame(bundle: MapBundle, st: MapStatic, opts: CreateOptions, c
   if (customScenario) installCustomScenario(w, customScenario);
   primeCountries(w);
   initialSnapshots(w);
+  ensureRt(w);
+  syncCountries(w);
   return w;
 }
 
