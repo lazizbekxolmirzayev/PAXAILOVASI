@@ -1,3 +1,4 @@
 {
-  "rewrites": [{ "source": "/((?!assets/|maps/|favicon\\.svg).*)", "destination": "/index.html" }]
+  "functions": { "api/tts.js": { "maxDuration": 30 } },
+  "rewrites": [{ "source": "/((?!api/|assets/|maps/|favicon\\.svg).*)", "destination": "/index.html" }]
 }

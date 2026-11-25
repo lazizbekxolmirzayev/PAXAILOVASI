@@ -143,3 +143,38 @@ input, textarea { cursor: text; }
 @keyframes kenburns { 0% { transform: scale(1); } 100% { transform: scale(1.08); } }
 @media (prefers-reduced-motion: reduce) { .animate-slowpan, .map-waves, .gold-shine, .dust { animation: none; } }
 .reduce-motion * { transition: none !important; animation: none !important; }
+
+/* ---------- story cinematic (historical background) ---------- */
+@keyframes st-cam-in { from { transform: scale(1.03) translate3d(0, 0, 0); } to { transform: scale(1.2) translate3d(-1.2%, -1.6%, 0); } }
+@keyframes st-cam-out { from { transform: scale(1.22) translate3d(1.2%, -1.2%, 0); } to { transform: scale(1.04) translate3d(0, 0, 0); } }
+@keyframes st-cam-left { from { transform: scale(1.14) translate3d(3.4%, 0, 0); } to { transform: scale(1.14) translate3d(-3.4%, 0, 0); } }
+@keyframes st-cam-right { from { transform: scale(1.14) translate3d(-3.4%, 0, 0); } to { transform: scale(1.14) translate3d(3.4%, 0, 0); } }
+.st-cam { position: absolute; inset: 0; transform-origin: 50% 62%; animation-duration: 30s; animation-timing-function: cubic-bezier(.4, 0, .6, 1); animation-fill-mode: both; will-change: transform; }
+.st-cam-in { animation-name: st-cam-in; }
+.st-cam-out { animation-name: st-cam-out; }
+.st-cam-left { animation-name: st-cam-left; }
+.st-cam-right { animation-name: st-cam-right; }
+.st-paused, .st-paused * { animation-play-state: paused !important; }
+.st-paused .st-once { animation-play-state: running !important; } /* one-shot entrances (title / end card / bars) must still finish when the story is paused or idle */
+@keyframes st-move { from { transform: translate(var(--x0, 0px), var(--y0, 0px)) scale(var(--s0, 1)); } to { transform: translate(var(--x1, 0px), var(--y1, 0px)) scale(var(--s1, 1)); } }
+@keyframes st-bob { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(var(--bob, -2px)) rotate(var(--rot, -1.2deg)); } }
+@keyframes st-leg { 0%, 100% { transform: rotate(var(--a, 26deg)); } 50% { transform: rotate(calc(var(--a, 26deg) * -1)); } }
+@keyframes st-flap { from { transform: skewY(-9deg) scaleX(1); } to { transform: skewY(9deg) scaleX(.86); } }
+@keyframes st-flicker { 0%, 100% { opacity: .9; transform: scale(1, 1); } 22% { opacity: 1; transform: scale(1.1, .92); } 47% { opacity: .78; transform: scale(.92, 1.12); } 73% { opacity: 1; transform: scale(1.05, 1); } }
+@keyframes st-twinkle { 0%, 100% { opacity: .2; } 50% { opacity: 1; } }
+@keyframes st-pulse { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
+@keyframes st-rise { 0% { transform: translate(0, 0) scale(.55); opacity: 0; } 18% { opacity: .6; } 100% { transform: translate(var(--dx, 16px), -130px) scale(1.9); opacity: 0; } }
+@keyframes st-draw { to { stroke-dashoffset: 0; } }
+@keyframes st-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes st-fade-to { from { opacity: 1; } to { opacity: var(--to, 0); } }
+@keyframes st-title { 0% { opacity: 0; letter-spacing: .55em; transform: translateY(10px); } 16% { opacity: 1; letter-spacing: .22em; transform: none; } 84% { opacity: 1; letter-spacing: .24em; } 100% { opacity: 0; letter-spacing: .26em; } }
+@keyframes st-chapter { 0% { opacity: 0; transform: translateX(-14px); } 12% { opacity: 1; transform: none; } 82% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes st-arrow { 0% { transform: translate(0, 0) rotate(-38deg); opacity: 0; } 8% { opacity: 1; } 50% { transform: translate(var(--ax, 90px), -46px) rotate(0deg); } 92% { opacity: 1; } 100% { transform: translate(calc(var(--ax, 90px) * 2), 6px) rotate(38deg); opacity: 0; } }
+@keyframes st-fall { from { transform: rotate(0deg); } to { transform: rotate(78deg); } }
+@keyframes st-wing { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(.3); } }
+@keyframes st-bars { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes st-blink { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
+.story-caption-word { transition: opacity .35s ease; }
+@media (prefers-reduced-motion: reduce) { .story-root *, .story-root *::before { animation: none !important; transition: none !important; } }
+@keyframes st-burst { 0% { transform: scale(.12); opacity: 0; } 25% { opacity: .9; } 100% { transform: scale(1.7); opacity: .75; } }
+@keyframes st-flashpop { 0% { transform: scale(.2); opacity: 0; } 12% { opacity: .95; } 100% { transform: scale(2.4); opacity: 0; } }

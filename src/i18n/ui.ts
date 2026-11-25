@@ -1013,4 +1013,13 @@ export const UI: [string, string, string][] = [
   ["Medium", "Среднее", "O'rta"],
   ["Low", "Низкое", "Past"],
   ["Current", "Сейчас", "Hozir"],
+  // ---- story cinematic (historical background) ----
+  ["Skip", "Пропустить", "O'tkazib yuborish"],
+  ["Narrator", "Рассказчик", "Rivoyatchi"],
+  ["Tap the screen for sound", "Коснитесь экрана, чтобы включить звук", "Ovoz uchun ekranga bosing"],
+  ["Voice: ElevenLabs", "Голос: ElevenLabs", "Ovoz: ElevenLabs"],
+  ["History could have turned here", "Здесь история могла пойти иначе", "Tarix bu yerda boshqacha tus olishi mumkin edi"],
+  ["Anatolia", "Анатолия", "Anatoliya"],
+  ["India", "Индия", "Hindiston"],
+  ["Illustrations are artistic and symbolic; the narration follows the documented account.", "Иллюстрации художественные и символические; рассказ следует документальным источникам.", "Tasvirlar badiiy va ramziy; hikoya hujjatlashtirilgan manbalarga asoslanadi."],
 ];

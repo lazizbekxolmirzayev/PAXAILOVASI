@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { AlertTriangle, ArrowLeft, Heart, Play, Users } from 'lucide-react';
+import { AnimatePresence, motion, useIsPresent } from 'framer-motion';
 import { SCENARIO_BY_ID } from '../data/scenarios';
 import { getCustom } from '../services/scenarios';
 import type { Difficulty, ScenarioDefinition } from '../types/game';
@@ -15,6 +16,12 @@ import { useProfile } from '../services/profile';
 import { useDataset } from '../hooks/useDataset';
 import { WorldMap } from '../components/map/WorldMap';
 import { tr } from '../i18n';
+import { useSettings } from '../services/settings';
+import { markIntroDone, shouldPlayIntro } from '../story/seen';
+import { IntroGuard } from '../story/IntroGuard';
+
+// the animated, voiced telling of the historical background (lazy: it carries all the artwork)
+const StoryPlayer = lazy(() => import('../story/StoryPlayer').then((m) => ({ default: m.StoryPlayer })));
 
 export default function ScenarioDetails() {
   const { id = '' } = useParams();
@@ -33,6 +40,10 @@ function Details({ def }: { def: ScenarioDefinition }) {
   const [choices, setChoices] = useState<Record<string, string>>(() => Object.fromEntries(def.decisions.map((d) => [d.id, d.options.find((o) => o.historical)?.id ?? d.options[0].id])));
   const [player, setPlayer] = useState(def.recommended);
   const [difficulty, setDifficulty] = useState<Difficulty>('normal');
+  const reduceMotion = useSettings((s) => s.reduceMotion);
+  const present = useIsPresent(); // false while the app's page transition is fading this page out
+  const [intro, setIntro] = useState(() => shouldPlayIntro(def.id, reduceMotion)); // the opening cutscene is on screen
+  const endIntro = useCallback(() => { markIntroDone(def.id); setIntro(false); }, [def.id]);
   const { data } = useDataset(def.mapKey);
   const active = (d: ScenarioDefinition['decisions'][number]) => !d.dependsOn || choices[d.dependsOn.decision] === d.dependsOn.option;
   const divergent = def.decisions.filter((d) => active(d) && !d.options.find((o) => o.id === choices[d.id])?.historical);
@@ -63,7 +74,19 @@ function Details({ def }: { def: ScenarioDefinition }) {
       <div className="grid gap-5 lg:grid-cols-[1.4fr_1fr]">
         <div className="space-y-5">
           <Panel title={tr('Historical background')} subtitle={<FactBadge factual />}>
-            <div className="space-y-3 font-serif text-[17px] leading-relaxed text-parchment-100/90">{def.background.map((p, i) => <p key={i}>{tr(p)}</p>)}</div>
+            <AnimatePresence initial={false}>
+              {intro && (
+                <motion.div key="intro" className="-m-[2px] overflow-hidden p-[2px]" exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.7, ease: 'easeInOut' }}>
+                  <IntroGuard onFail={endIntro}>
+                    <Suspense fallback={<div className="aspect-video w-full animate-pulse rounded-md bg-ink-900/70 ring-1 ring-gold-600/30" />}>
+                      <StoryPlayer def={def} onDone={endIntro} active={present} />
+                    </Suspense>
+                  </IntroGuard>
+                </motion.div>
+              )}
+            </AnimatePresence>
+            {/* while the cutscene plays the text is only for screen readers; afterwards it is the section's content */}
+            <div className={cx('space-y-3 font-serif text-[17px] leading-relaxed text-parchment-100/90', intro && 'sr-only')} style={intro ? undefined : { animation: 'st-fade-in .9s ease-out both' }}>{def.background.map((p, i) => <p key={i}>{tr(p)}</p>)}</div>
             <p className="mt-3 text-[11px] text-parchment-300/60">{tr(def.sourcesNote)}</p>
             {def.sensitivity && <div className="mt-3 flex gap-2 rounded-md bg-blood-600/10 p-3 text-sm text-parchment-100 ring-1 ring-blood-400/30"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-blood-400" /><span>{tr(def.sensitivity)}</span></div>}
           </Panel>
