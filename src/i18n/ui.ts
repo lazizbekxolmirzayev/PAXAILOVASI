@@ -1015,6 +1015,7 @@ export const UI: [string, string, string][] = [
   ["Current", "Сейчас", "Hozir"],
   // ---- story cinematic (historical background) ----
   ["Skip", "Пропустить", "O'tkazib yuborish"],
+  ["Loading…", "Загрузка…", "Yuklanmoqda…"],
   ["Narrator", "Рассказчик", "Rivoyatchi"],
   ["Tap the screen for sound", "Коснитесь экрана, чтобы включить звук", "Ovoz uchun ekranga bosing"],
   ["Voice: ElevenLabs", "Голос: ElevenLabs", "Ovoz: ElevenLabs"],

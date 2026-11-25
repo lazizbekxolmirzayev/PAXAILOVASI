@@ -15,6 +15,8 @@ export const Particles = memo(function Particles({ kind, running, density = 1 }:
     const ctx = canvas?.getContext('2d');
     if (!canvas || !ctx) return;
     const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    /** Pixels per "design pixel": particles were drawn for a ~900px-wide stage, so they grow on big full-screen stages. */
+    let unit = dpr;
     const n = Math.round(COUNT[kind] * density);
     const ps: P[] = Array.from({ length: n }, (_, i) => ({ x: R(i * 3.1), y: R(i * 7.7), z: 0.3 + R(i * 5.3) * 0.7, ph: R(i * 9.1) * 6.283 }));
     const s = { ps, w: 1, h: 1, dpr, time: 0, render: () => {}, step: (_dt: number) => {} };
@@ -23,10 +25,10 @@ export const Particles = memo(function Particles({ kind, running, density = 1 }:
       ctx.globalCompositeOperation = kind === 'embers' ? 'lighter' : 'source-over';
       for (const p of s.ps) {
         const x = p.x * s.w, y = p.y * s.h;
-        if (kind === 'snow') { ctx.fillStyle = `rgba(232,242,255,${0.28 + p.z * 0.55})`; ctx.beginPath(); ctx.arc(x, y, (0.8 + p.z * 2.1) * dpr, 0, 6.283); ctx.fill(); }
-        else if (kind === 'dust') { ctx.fillStyle = `rgba(255,222,170,${0.12 + p.z * 0.32})`; ctx.beginPath(); ctx.arc(x, y, (0.7 + p.z * 1.7) * dpr, 0, 6.283); ctx.fill(); }
-        else if (kind === 'embers') { const a = 0.35 + 0.55 * Math.abs(Math.sin(s.time * 2.2 + p.ph)); ctx.fillStyle = `rgba(255,${150 + Math.round(p.z * 70)},70,${a * p.z})`; ctx.beginPath(); ctx.arc(x, y, (0.8 + p.z * 1.6) * dpr, 0, 6.283); ctx.fill(); }
-        else { ctx.fillStyle = `rgba(214,204,196,${0.14 + p.z * 0.3})`; ctx.fillRect(x, y, (1 + p.z * 1.8) * dpr, (1 + p.z * 1.2) * dpr); }
+        if (kind === 'snow') { ctx.fillStyle = `rgba(232,242,255,${0.28 + p.z * 0.55})`; ctx.beginPath(); ctx.arc(x, y, (0.8 + p.z * 2.1) * unit, 0, 6.283); ctx.fill(); }
+        else if (kind === 'dust') { ctx.fillStyle = `rgba(255,222,170,${0.12 + p.z * 0.32})`; ctx.beginPath(); ctx.arc(x, y, (0.7 + p.z * 1.7) * unit, 0, 6.283); ctx.fill(); }
+        else if (kind === 'embers') { const a = 0.35 + 0.55 * Math.abs(Math.sin(s.time * 2.2 + p.ph)); ctx.fillStyle = `rgba(255,${150 + Math.round(p.z * 70)},70,${a * p.z})`; ctx.beginPath(); ctx.arc(x, y, (0.8 + p.z * 1.6) * unit, 0, 6.283); ctx.fill(); }
+        else { ctx.fillStyle = `rgba(214,204,196,${0.14 + p.z * 0.3})`; ctx.fillRect(x, y, (1 + p.z * 1.8) * unit, (1 + p.z * 1.2) * unit); }
       }
     };
     s.step = (dt) => {
@@ -44,6 +46,7 @@ export const Particles = memo(function Particles({ kind, running, density = 1 }:
     state.current = s;
     const resize = () => {
       const r = canvas.getBoundingClientRect();
+      unit = dpr * Math.min(2.2, Math.max(1, r.width / 900));
       s.w = canvas.width = Math.max(1, Math.round(r.width * dpr));
       s.h = canvas.height = Math.max(1, Math.round(r.height * dpr));
       s.render();

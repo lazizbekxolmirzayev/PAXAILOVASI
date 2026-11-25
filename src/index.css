@@ -154,6 +154,8 @@ input, textarea { cursor: text; }
 .st-cam-out { animation-name: st-cam-out; }
 .st-cam-left { animation-name: st-cam-left; }
 .st-cam-right { animation-name: st-cam-right; }
+.st-stage { width: min(100%, calc(100vh * 16 / 9)); } /* the cutscene's picture: as large as the screen allows, always 16:9 */
+@supports (height: 100dvh) { .st-stage { width: min(100%, calc(100dvh * 16 / 9)); } }
 .st-paused, .st-paused * { animation-play-state: paused !important; }
 .st-paused .st-once { animation-play-state: running !important; } /* one-shot entrances (title / end card / bars) must still finish when the story is paused or idle */
 @keyframes st-move { from { transform: translate(var(--x0, 0px), var(--y0, 0px)) scale(var(--s0, 1)); } to { transform: translate(var(--x1, 0px), var(--y1, 0px)) scale(var(--s1, 1)); } }

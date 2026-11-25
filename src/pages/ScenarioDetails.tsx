@@ -1,7 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { AlertTriangle, ArrowLeft, Heart, Play, Users } from 'lucide-react';
-import { AnimatePresence, motion, useIsPresent } from 'framer-motion';
+import { AnimatePresence, useIsPresent } from 'framer-motion';
 import { SCENARIO_BY_ID } from '../data/scenarios';
 import { getCustom } from '../services/scenarios';
 import type { Difficulty, ScenarioDefinition } from '../types/game';
@@ -18,7 +18,7 @@ import { WorldMap } from '../components/map/WorldMap';
 import { tr } from '../i18n';
 import { useSettings } from '../services/settings';
 import { markIntroDone, shouldPlayIntro } from '../story/seen';
-import { IntroGuard } from '../story/IntroGuard';
+import { IntroGuard, StoryBlackout } from '../story/IntroGuard';
 
 // the animated, voiced telling of the historical background (lazy: it carries all the artwork)
 const StoryPlayer = lazy(() => import('../story/StoryPlayer').then((m) => ({ default: m.StoryPlayer })));
@@ -74,15 +74,14 @@ function Details({ def }: { def: ScenarioDefinition }) {
       <div className="grid gap-5 lg:grid-cols-[1.4fr_1fr]">
         <div className="space-y-5">
           <Panel title={tr('Historical background')} subtitle={<FactBadge factual />}>
+            {/* the cutscene covers the whole screen (it is drawn into <body>), so nothing of it sits in the page */}
             <AnimatePresence initial={false}>
               {intro && (
-                <motion.div key="intro" className="-m-[2px] overflow-hidden p-[2px]" exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.7, ease: 'easeInOut' }}>
-                  <IntroGuard onFail={endIntro}>
-                    <Suspense fallback={<div className="aspect-video w-full animate-pulse rounded-md bg-ink-900/70 ring-1 ring-gold-600/30" />}>
-                      <StoryPlayer def={def} onDone={endIntro} active={present} />
-                    </Suspense>
-                  </IntroGuard>
-                </motion.div>
+                <IntroGuard key="intro" onFail={endIntro}>
+                  <Suspense fallback={<StoryBlackout active={present} onSkip={endIntro} />}>
+                    <StoryPlayer def={def} onDone={endIntro} active={present} />
+                  </Suspense>
+                </IntroGuard>
               )}
             </AnimatePresence>
             {/* while the cutscene plays the text is only for screen readers; afterwards it is the section's content */}
